@@ -45,7 +45,7 @@ const CalendarDateCell = ({
   return (
     <div
       className={cn(
-        "flex h-11 w-11 items-center justify-center rounded-full text-sm transition-all",
+        "flex h-8 w-8 sm:h-11 sm:w-11 items-center justify-center rounded-full text-sm transition-all",
         hasSlots ? "cursor-pointer hover:bg-craft-pastel" : "cursor-not-allowed opacity-50",
         selected && "bg-craft text-white hover:bg-craft-dark",
         !selected && !disabled && "text-gray-700",
@@ -60,7 +60,7 @@ const CalendarDateCell = ({
         {hasSlots && (
           <span 
             className={cn(
-              "mt-0.5 text-[10px] font-medium",
+              "mt-0.5 text-[8px] sm:text-[10px] font-medium",
               selected ? "text-white" : "text-craft-dark"
             )}
           >

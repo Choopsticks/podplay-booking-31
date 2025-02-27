@@ -37,15 +37,15 @@ const ActivityCalendar: React.FC<ActivityCalendarProps> = ({ activity, onSelectT
   
   return (
     <section className="bg-sand-light py-12" id="booking">
-      <div className="container">
+      <div className="container px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-4xl">
-          <div className="rounded-xl border border-sand/50 bg-white p-6 shadow-sm">
+          <div className="rounded-xl border border-sand/50 bg-white p-4 sm:p-6 shadow-sm">
             <h2 className="text-2xl font-medium text-gray-900">Select Date & Time</h2>
             <p className="mt-2 text-gray-600">Choose from available slots below</p>
             
             <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
-              <div className="animate-fade-up" style={{ animationDelay: "0.3s" }}>
-                <div className="rounded-lg border border-gray-200 bg-white p-3">
+              <div className="animate-fade-up overflow-x-auto" style={{ animationDelay: "0.3s" }}>
+                <div className="rounded-lg border border-gray-200 bg-white p-2 sm:p-3 min-w-[280px]">
                   {hasAvailableDates ? (
                     <Calendar
                       mode="single"
@@ -85,7 +85,7 @@ const ActivityCalendar: React.FC<ActivityCalendarProps> = ({ activity, onSelectT
               </div>
               
               <div className="animate-fade-up" style={{ animationDelay: "0.4s" }}>
-                <div className="rounded-lg border border-gray-200 bg-white p-6">
+                <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
                   <h3 className="text-lg font-medium text-gray-900">
                     {selectedDate ? (
                       <>Available Times for {format(selectedDate, "MMMM d, yyyy")}</>

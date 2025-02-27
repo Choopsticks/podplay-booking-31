@@ -1,18 +1,55 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useRef } from "react";
+import { Link, useParams } from "react-router-dom";
 import { sampleActivity } from "@/lib/activity-data";
+import { TimeSlot } from "@/lib/activity-data";
+import ActivityHero from "@/components/ActivityHero";
+import ActivityDescription from "@/components/ActivityDescription";
+import ActivityCalendar from "@/components/ActivityCalendar";
+import ReviewSection from "@/components/ReviewSection";
+import BookingForm from "@/components/BookingForm";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ChevronLeft } from "lucide-react";
 
-const Index = () => {
-  const [isHovering, setIsHovering] = useState(false);
-
+const ActivityDetail = () => {
+  const { id } = useParams<{ id: string }>();
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
+  const bookingRef = useRef<HTMLDivElement>(null);
+  
+  // In a real app, you would fetch the activity by ID from an API
+  // For now, we'll just use our sample activity
+  const activity = sampleActivity;
+  
+  const handleTimeSlotSelect = (slot: TimeSlot) => {
+    setSelectedTimeSlot(slot);
+    
+    // Scroll to the booking form
+    setTimeout(() => {
+      if (bookingRef.current) {
+        bookingRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    }, 100);
+  };
+  
+  const handleBookNowClick = () => {
+    // Scroll to the calendar section
+    const calendarSection = document.getElementById("booking");
+    if (calendarSection) {
+      calendarSection.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+  
+  const handleCloseBookingForm = () => {
+    setSelectedTimeSlot(null);
+  };
+  
   return (
     <div className="min-h-screen bg-sand-light">
       <header className="border-b border-sand-dark/20 bg-white backdrop-blur-sm">
         <div className="container flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-semibold text-craft-dark">PodPlay</span>
+            <Link to="/" className="text-2xl font-semibold text-craft-dark">PodPlay</Link>
           </div>
           <nav>
             <ul className="flex items-center gap-8">
@@ -43,66 +80,36 @@ const Index = () => {
           </div>
         </div>
       </header>
-
-      <section className="py-16">
-        <div className="container">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="text-4xl font-medium leading-tight text-gray-900 md:text-5xl">
-              Enriching learning pods for young explorers
-            </h1>
-            <p className="mt-6 text-xl text-gray-600">
-              Connect with expert-led pods designed for children ages 2-8
-            </p>
-            <div className="mt-8 flex justify-center gap-4">
-              <Button size="lg" className="bg-craft-dark hover:bg-craft text-white">
-                Find Pods
-              </Button>
-              <Button size="lg" variant="outline" className="border-craft text-craft-dark hover:bg-craft-pastel hover:text-craft-dark">
-                Host a Pod
-              </Button>
+      
+      <div className="container py-4">
+        <Link to="/" className="inline-flex items-center gap-1 text-sm text-gray-600 transition-colors hover:text-craft-dark">
+          <ChevronLeft size={14} />
+          Back to Activities
+        </Link>
+      </div>
+      
+      <ActivityHero activity={activity} handleBookNowClick={handleBookNowClick} />
+      
+      <ActivityDescription activity={activity} />
+      
+      <ActivityCalendar activity={activity} onSelectTimeSlot={handleTimeSlotSelect} />
+      
+      {selectedTimeSlot && (
+        <div className="bg-sand-light py-12" ref={bookingRef}>
+          <div className="container">
+            <div className="mx-auto max-w-2xl">
+              <BookingForm
+                activity={activity}
+                selectedTimeSlot={selectedTimeSlot}
+                onClose={handleCloseBookingForm}
+              />
             </div>
           </div>
         </div>
-      </section>
-
-      <section className="py-16 bg-white">
-        <div className="container">
-          <h2 className="text-center text-3xl font-medium text-gray-900">Featured Activities</h2>
-          <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            <Link 
-              to={`/activity/${sampleActivity.id}`}
-              className="group relative overflow-hidden rounded-xl bg-white"
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => setIsHovering(false)}
-            >
-              <div className="aspect-h-3 aspect-w-4 relative overflow-hidden rounded-t-xl bg-gray-100">
-                <img
-                  src={`${sampleActivity.imageUrls[0]}?w=600&auto=format&q=75`}
-                  alt={sampleActivity.title}
-                  className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                  loading="lazy"
-                />
-                <div className={`absolute inset-0 bg-black/10 transition-opacity duration-300 ${isHovering ? 'opacity-0' : 'opacity-100'}`}></div>
-              </div>
-              <div className="p-6">
-                <span className="inline-block rounded-full bg-craft-pastel px-3 py-1 text-xs font-medium text-craft-dark">
-                  {sampleActivity.ageRange}
-                </span>
-                <h3 className="mt-4 text-xl font-medium text-gray-900">{sampleActivity.title}</h3>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-sm text-gray-500">with {sampleActivity.instructor}</span>
-                </div>
-                <p className="mt-3 text-sm text-gray-600 line-clamp-2">{sampleActivity.description}</p>
-                <div className="mt-6 flex items-center justify-between">
-                  <span className="font-medium text-gray-900">${sampleActivity.price}</span>
-                  <span className="text-sm text-gray-500">{sampleActivity.duration}</span>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </div>
-      </section>
-
+      )}
+      
+      <ReviewSection activity={activity} />
+      
       <footer className="bg-gray-50 py-12 border-t border-gray-200">
         <div className="container">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
@@ -130,7 +137,7 @@ const Index = () => {
               <h3 className="font-medium text-gray-900">Stay Updated</h3>
               <p className="mt-4 text-sm text-gray-600">Subscribe to our newsletter for new activities and updates.</p>
               <div className="mt-4 flex">
-                <input type="email" placeholder="Your email" className="w-full rounded-l-md border border-gray-300 px-4 py-2 focus:border-craft focus:outline-none focus:ring-1 focus:ring-craft" />
+                <Input type="email" placeholder="Your email" className="w-full rounded-l-md" />
                 <Button className="rounded-l-none rounded-r-md bg-craft hover:bg-craft-dark">
                   Join
                 </Button>
@@ -143,4 +150,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default ActivityDetail;

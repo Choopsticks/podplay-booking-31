@@ -71,7 +71,7 @@ const ActivityHero: React.FC<ActivityHeroProps> = ({ activity, handleBookNowClic
           </div>
           
           <div className="order-1 lg:order-2">
-            <div className="relative aspect-h-4 aspect-w-5 overflow-hidden rounded-xl bg-gray-50 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+            <div className="relative aspect-h-3 aspect-w-5 overflow-hidden rounded-xl bg-gray-50 animate-fade-in" style={{ animationDelay: "0.2s" }}>
               {activity.imageUrls.map((url, index) => (
                 <img
                   key={index}

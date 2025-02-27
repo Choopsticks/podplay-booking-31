@@ -12,7 +12,7 @@ const Index = () => {
       <header className="border-b border-sand-dark/20 bg-white backdrop-blur-sm">
         <div className="container flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
-            <span className="text-2xl font-semibold text-craft-dark">PodPlay</span>
+            <span className="text-2xl font-semibold text-craft-dark">LittleBranch</span>
           </div>
           <nav>
             <ul className="flex items-center gap-8">
@@ -107,7 +107,7 @@ const Index = () => {
         <div className="container">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <div>
-              <span className="text-xl font-semibold text-craft-dark">PodPlay</span>
+              <span className="text-xl font-semibold text-craft-dark">LittleBranch</span>
               <p className="mt-4 text-sm text-gray-600">Connecting families with enriching learning experiences for children.</p>
             </div>
             <div>

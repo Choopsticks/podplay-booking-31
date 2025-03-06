@@ -1,4 +1,5 @@
-import React, { useState, useRef } from "react";
+
+import React, { useState, useRef, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { sampleActivity } from "@/lib/activity-data";
 import { TimeSlot } from "@/lib/activity-data";
@@ -13,18 +14,35 @@ import { ChevronLeft, Menu, X } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { 
+  ActivityHeroSkeleton, 
+  ActivityDescriptionSkeleton, 
+  ActivityCalendarSkeleton,
+  ReviewSectionSkeleton 
+} from "@/components/ActivitySkeleton";
 
 const ActivityDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const bookingRef = useRef<HTMLDivElement>(null);
-  const { user, isLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   
   // In a real app, you would fetch the activity by ID from an API
-  // For now, we'll just use our sample activity
+  // For now, we'll just use our sample activity and simulate loading
   const activity = sampleActivity;
+
+  useEffect(() => {
+    // Simulate data loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+    
+    return () => clearTimeout(timer);
+  }, []);
   
   const handleTimeSlotSelect = (slot: TimeSlot) => {
     setSelectedTimeSlot(slot);
@@ -69,8 +87,8 @@ const ActivityDetail = () => {
   };
   
   return (
-    <div className="min-h-screen bg-sand-light">
-      <header className="border-b border-sand-dark/20 bg-white backdrop-blur-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border backdrop-blur-sm sticky top-0 z-10 bg-background/80">
         <div className="container flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
             <Link to="/" className="text-2xl font-semibold text-craft-dark">LittleBranch</Link>
@@ -80,17 +98,17 @@ const ActivityDetail = () => {
           <nav className="hidden md:block">
             <ul className="flex items-center gap-8">
               <li>
-                <a href="#" className="text-sm text-gray-600 transition-colors hover:text-craft-dark">
+                <a href="#" className="text-sm transition-colors hover:text-craft-dark">
                   Explore
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 transition-colors hover:text-craft-dark">
+                <a href="#" className="text-sm transition-colors hover:text-craft-dark">
                   How It Works
                 </a>
               </li>
               <li>
-                <a href="#" className="text-sm text-gray-600 transition-colors hover:text-craft-dark">
+                <a href="#" className="text-sm transition-colors hover:text-craft-dark">
                   For Educators
                 </a>
               </li>
@@ -98,11 +116,12 @@ const ActivityDetail = () => {
           </nav>
           
           <div className="hidden md:flex items-center gap-4">
-            {isLoading ? (
-              <div className="h-9 w-16 bg-gray-200 animate-pulse rounded-md"></div>
+            <ThemeToggle />
+            {authLoading ? (
+              <div className="h-9 w-16 bg-secondary animate-pulse rounded-md"></div>
             ) : user ? (
               <>
-                <span className="text-sm text-gray-600">Hi, {user.email?.split('@')[0]}</span>
+                <span className="text-sm text-muted-foreground">Hi, {user.email?.split('@')[0]}</span>
                 <Button 
                   variant="outline" 
                   size="sm" 
@@ -134,42 +153,45 @@ const ActivityDetail = () => {
           </div>
           
           {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden p-2 text-gray-600" 
-            onClick={toggleMobileMenu}
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          <div className="md:hidden flex items-center gap-2">
+            <ThemeToggle />
+            <button 
+              className="p-2" 
+              onClick={toggleMobileMenu}
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
         
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white py-4 border-t border-gray-100 animate-fade-down absolute w-full z-20">
+          <div className="md:hidden bg-background py-4 border-t border-border animate-fade-down absolute w-full z-20">
             <div className="container">
               <nav className="space-y-4">
                 <ul className="space-y-4">
                   <li>
-                    <a href="#" className="block text-gray-600 hover:text-craft-dark">
+                    <a href="#" className="block hover:text-craft-dark">
                       Explore
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="block text-gray-600 hover:text-craft-dark">
+                    <a href="#" className="block hover:text-craft-dark">
                       How It Works
                     </a>
                   </li>
                   <li>
-                    <a href="#" className="block text-gray-600 hover:text-craft-dark">
+                    <a href="#" className="block hover:text-craft-dark">
                       For Educators
                     </a>
                   </li>
                 </ul>
                 <div className="flex flex-col gap-2 pt-2">
-                  {isLoading ? (
-                    <div className="h-9 w-full bg-gray-200 animate-pulse rounded-md"></div>
+                  {authLoading ? (
+                    <div className="h-9 w-full bg-secondary animate-pulse rounded-md"></div>
                   ) : user ? (
                     <>
-                      <span className="text-sm text-gray-600">Hi, {user.email?.split('@')[0]}</span>
+                      <span className="text-sm text-muted-foreground">Hi, {user.email?.split('@')[0]}</span>
                       <Button 
                         variant="outline"
                         className="w-full border-craft text-craft-dark justify-center hover:bg-craft-pastel hover:text-craft-dark"
@@ -203,60 +225,71 @@ const ActivityDetail = () => {
       </header>
       
       <div className="container py-4">
-        <Link to="/" className="inline-flex items-center gap-1 text-sm text-gray-600 transition-colors hover:text-craft-dark">
+        <Link to="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-craft-dark">
           <ChevronLeft size={14} />
           Back to Activities
         </Link>
       </div>
       
-      <ActivityHero activity={activity} handleBookNowClick={handleBookNowClick} />
-      
-      <ActivityDescription activity={activity} />
-      
-      <ActivityCalendar activity={activity} onSelectTimeSlot={handleTimeSlotSelect} />
-      
-      {selectedTimeSlot && (
-        <div className="bg-sand-light py-12" ref={bookingRef}>
-          <div className="container">
-            <div className="mx-auto max-w-2xl">
-              <BookingForm
-                activity={activity}
-                selectedTimeSlot={selectedTimeSlot}
-                onClose={handleCloseBookingForm}
-              />
+      {isLoading ? (
+        <>
+          <ActivityHeroSkeleton />
+          <ActivityDescriptionSkeleton />
+          <ActivityCalendarSkeleton />
+          <ReviewSectionSkeleton />
+        </>
+      ) : (
+        <>
+          <ActivityHero activity={activity} handleBookNowClick={handleBookNowClick} />
+          
+          <ActivityDescription activity={activity} />
+          
+          <ActivityCalendar activity={activity} onSelectTimeSlot={handleTimeSlotSelect} />
+          
+          {selectedTimeSlot && (
+            <div className="bg-background py-12" ref={bookingRef}>
+              <div className="container">
+                <div className="mx-auto max-w-2xl">
+                  <BookingForm
+                    activity={activity}
+                    selectedTimeSlot={selectedTimeSlot}
+                    onClose={handleCloseBookingForm}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          )}
+          
+          <ReviewSection activity={activity} />
+        </>
       )}
       
-      <ReviewSection activity={activity} />
-      
-      <footer className="bg-gray-50 py-12 border-t border-gray-200">
+      <footer className="bg-secondary py-12 border-t border-border">
         <div className="container">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <div>
               <span className="text-xl font-semibold text-craft-dark">LittleBranch</span>
-              <p className="mt-4 text-sm text-gray-600">Connecting families with enriching learning experiences for children.</p>
+              <p className="mt-4 text-sm text-muted-foreground">Connecting families with enriching learning experiences for children.</p>
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Company</h3>
+              <h3 className="font-medium">Company</h3>
               <ul className="mt-4 space-y-3">
-                <li><a href="#" className="text-sm text-gray-600 hover:text-craft-dark">About</a></li>
-                <li><a href="#" className="text-sm text-gray-600 hover:text-craft-dark">Careers</a></li>
-                <li><a href="#" className="text-sm text-gray-600 hover:text-craft-dark">Blog</a></li>
+                <li><a href="#" className="text-sm text-muted-foreground hover:text-craft-dark">About</a></li>
+                <li><a href="#" className="text-sm text-muted-foreground hover:text-craft-dark">Careers</a></li>
+                <li><a href="#" className="text-sm text-muted-foreground hover:text-craft-dark">Blog</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Support</h3>
+              <h3 className="font-medium">Support</h3>
               <ul className="mt-4 space-y-3">
-                <li><a href="#" className="text-sm text-gray-600 hover:text-craft-dark">Contact Us</a></li>
-                <li><a href="#" className="text-sm text-gray-600 hover:text-craft-dark">FAQs</a></li>
-                <li><a href="#" className="text-sm text-gray-600 hover:text-craft-dark">Terms of Service</a></li>
+                <li><a href="#" className="text-sm text-muted-foreground hover:text-craft-dark">Contact Us</a></li>
+                <li><a href="#" className="text-sm text-muted-foreground hover:text-craft-dark">FAQs</a></li>
+                <li><a href="#" className="text-sm text-muted-foreground hover:text-craft-dark">Terms of Service</a></li>
               </ul>
             </div>
             <div>
-              <h3 className="font-medium text-gray-900">Stay Updated</h3>
-              <p className="mt-4 text-sm text-gray-600">Subscribe to our newsletter for new activities and updates.</p>
+              <h3 className="font-medium">Stay Updated</h3>
+              <p className="mt-4 text-sm text-muted-foreground">Subscribe to our newsletter for new activities and updates.</p>
               <div className="mt-4 flex">
                 <Input type="email" placeholder="Your email" className="w-full rounded-l-md" />
                 <Button className="rounded-l-none rounded-r-md bg-craft hover:bg-craft-dark">

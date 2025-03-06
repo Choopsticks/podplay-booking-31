@@ -1,15 +1,35 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { sampleActivity } from "@/lib/activity-data";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [isHovering, setIsHovering] = useState(false);
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Signed out successfully",
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-sand-light">
-      <header className="border-b border-sand-dark/20 bg-white backdrop-blur-sm">
+      <header className="border-b border-sand-dark/20 bg-white backdrop-blur-sm sticky top-0 z-10">
         <div className="container flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
             <span className="text-2xl font-semibold text-craft-dark">LittleBranch</span>
@@ -34,12 +54,39 @@ const Index = () => {
             </ul>
           </nav>
           <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="border-craft text-craft-dark hover:bg-craft-pastel hover:text-craft-dark">
-              Log In
-            </Button>
-            <Button size="sm" className="bg-craft hover:bg-craft-dark">
-              Sign Up
-            </Button>
+            {isLoading ? (
+              <div className="h-9 w-16 bg-gray-200 animate-pulse rounded-md"></div>
+            ) : user ? (
+              <>
+                <span className="text-sm text-gray-600">Hi, {user.email?.split('@')[0]}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-craft text-craft-dark hover:bg-craft-pastel hover:text-craft-dark"
+                  onClick={handleSignOut}
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-craft text-craft-dark hover:bg-craft-pastel hover:text-craft-dark"
+                  onClick={() => navigate("/auth")}
+                >
+                  Log In
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-craft hover:bg-craft-dark"
+                  onClick={() => navigate("/auth", { state: { isSignUp: true } })}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>

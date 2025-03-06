@@ -1,6 +1,5 @@
-
 import React, { useState, useRef } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { sampleActivity } from "@/lib/activity-data";
 import { TimeSlot } from "@/lib/activity-data";
 import ActivityHero from "@/components/ActivityHero";
@@ -11,12 +10,17 @@ import BookingForm from "@/components/BookingForm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronLeft, Menu, X } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const ActivityDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const bookingRef = useRef<HTMLDivElement>(null);
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
   
   // In a real app, you would fetch the activity by ID from an API
   // For now, we'll just use our sample activity
@@ -48,13 +52,28 @@ const ActivityDetail = () => {
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Signed out successfully",
+      });
+    }
+  };
   
   return (
     <div className="min-h-screen bg-sand-light">
       <header className="border-b border-sand-dark/20 bg-white backdrop-blur-sm sticky top-0 z-10">
         <div className="container flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
-            <Link to="/" className="text-2xl font-semibold text-craft-dark">PodPlay</Link>
+            <Link to="/" className="text-2xl font-semibold text-craft-dark">LittleBranch</Link>
           </div>
           
           {/* Desktop Navigation */}
@@ -79,12 +98,39 @@ const ActivityDetail = () => {
           </nav>
           
           <div className="hidden md:flex items-center gap-4">
-            <Button variant="outline" size="sm" className="border-craft text-craft-dark hover:bg-craft-pastel hover:text-craft-dark">
-              Log In
-            </Button>
-            <Button size="sm" className="bg-craft hover:bg-craft-dark">
-              Sign Up
-            </Button>
+            {isLoading ? (
+              <div className="h-9 w-16 bg-gray-200 animate-pulse rounded-md"></div>
+            ) : user ? (
+              <>
+                <span className="text-sm text-gray-600">Hi, {user.email?.split('@')[0]}</span>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-craft text-craft-dark hover:bg-craft-pastel hover:text-craft-dark"
+                  onClick={handleSignOut}
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-craft text-craft-dark hover:bg-craft-pastel hover:text-craft-dark"
+                  onClick={() => navigate("/auth")}
+                >
+                  Log In
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-craft hover:bg-craft-dark"
+                  onClick={() => navigate("/auth", { state: { isSignUp: true } })}
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
           </div>
           
           {/* Mobile Menu Button */}
@@ -119,12 +165,36 @@ const ActivityDetail = () => {
                   </li>
                 </ul>
                 <div className="flex flex-col gap-2 pt-2">
-                  <Button variant="outline" className="w-full border-craft text-craft-dark justify-center hover:bg-craft-pastel hover:text-craft-dark">
-                    Log In
-                  </Button>
-                  <Button className="w-full bg-craft hover:bg-craft-dark justify-center">
-                    Sign Up
-                  </Button>
+                  {isLoading ? (
+                    <div className="h-9 w-full bg-gray-200 animate-pulse rounded-md"></div>
+                  ) : user ? (
+                    <>
+                      <span className="text-sm text-gray-600">Hi, {user.email?.split('@')[0]}</span>
+                      <Button 
+                        variant="outline"
+                        className="w-full border-craft text-craft-dark justify-center hover:bg-craft-pastel hover:text-craft-dark"
+                        onClick={handleSignOut}
+                      >
+                        Sign Out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button 
+                        variant="outline" 
+                        className="w-full border-craft text-craft-dark justify-center hover:bg-craft-pastel hover:text-craft-dark"
+                        onClick={() => navigate("/auth")}
+                      >
+                        Log In
+                      </Button>
+                      <Button 
+                        className="w-full bg-craft hover:bg-craft-dark justify-center"
+                        onClick={() => navigate("/auth", { state: { isSignUp: true } })}
+                      >
+                        Sign Up
+                      </Button>
+                    </>
+                  )}
                 </div>
               </nav>
             </div>
@@ -165,7 +235,7 @@ const ActivityDetail = () => {
         <div className="container">
           <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
             <div>
-              <span className="text-xl font-semibold text-craft-dark">PodPlay</span>
+              <span className="text-xl font-semibold text-craft-dark">LittleBranch</span>
               <p className="mt-4 text-sm text-gray-600">Connecting families with enriching learning experiences for children.</p>
             </div>
             <div>

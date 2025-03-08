@@ -668,7 +668,7 @@ export const sampleActivities: Activity[] = [
 ];
 
 // Helper function to get an activity by ID
-export function getActivity(id: string | undefined): Activity | undefined {
+export function getActivity(id: string | number | undefined): Activity | undefined {
   if (!id) return undefined;
   // Convert number ID to string if needed
   const stringId = typeof id === 'number' ? id.toString() : id;

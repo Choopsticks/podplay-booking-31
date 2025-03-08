@@ -19,8 +19,8 @@ const ActivityDetail = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   
-  // Get the activity by ID
-  const activity = id ? getActivity(Number(id)) : undefined;
+  // Get the activity by ID - passing id directly as it's already string or undefined
+  const activity = getActivity(id);
   
   // If activity not found, show error state
   if (!activity) {

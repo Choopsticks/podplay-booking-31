@@ -13,7 +13,7 @@ interface ExtendedDateObj {
   today: boolean;
   prevMonth: boolean;
   nextMonth: boolean;
-  getDateProps: () => {
+  getDateProps: (props?: any) => {
     onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
   };
 }
@@ -74,7 +74,7 @@ export const CalendarDateCell: React.FC<CalendarDateCellProps> = ({
         "focus:outline-none focus:ring-2 focus:ring-craft focus:ring-offset-2"
       )}
       key={dateObj.date.toString()}
-      onClick={() => dateObj.selectable && dateObj.getDateProps().onClick()}
+      onClick={() => dateObj.selectable && dateObj.getDateProps({}).onClick}
       type="button"
     >
       <span>{format(dateObj.date, "d")}</span>

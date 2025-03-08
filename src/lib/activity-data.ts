@@ -1,12 +1,18 @@
-
 import { format, addDays, subDays } from 'date-fns';
+
+export interface Review {
+  id: number;
+  author: string;
+  date: string;
+  rating: number;
+  comment: string;
+}
 
 export interface TimeSlot {
   id: string;
   time: string;
   date: Date;
   available: boolean;
-  // Add these properties to fix TypeScript errors
   totalSlots?: number;
   bookedSlots?: number;
 }
@@ -30,11 +36,47 @@ export interface Activity {
     email?: string;
     website?: string;
   };
-  // Add these properties to fix TypeScript errors
   duration?: string;
   instructor?: string;
   price?: number;
+  reviews: Review[];
+  phone?: string;
+  email?: string;
+  url?: string;
+  availableSlots?: TimeSlot[];
 }
+
+// Sample reviews data that can be used across activities
+const sampleReviews: Review[] = [
+  {
+    id: 1,
+    author: "Maria Santos",
+    date: "March 5, 2023",
+    rating: 5,
+    comment: "My kids had an amazing time! The staff was very attentive and the activities were perfect for their age. We'll definitely return!"
+  },
+  {
+    id: 2,
+    author: "Juan Reyes",
+    date: "February 20, 2023",
+    rating: 4,
+    comment: "Great experience overall. The place was clean and well-maintained. My only suggestion would be more food options."
+  },
+  {
+    id: 3,
+    author: "Ana Gomez",
+    date: "January 15, 2023",
+    rating: 5,
+    comment: "This was our third visit and it gets better every time. The new activities they've added are fantastic!"
+  },
+  {
+    id: 4,
+    author: "Miguel Lim",
+    date: "December 28, 2022",
+    rating: 3,
+    comment: "The activities were good but it was too crowded when we visited. Maybe consider limiting the number of visitors during peak days."
+  }
+];
 
 // Mock data for our application
 export const sampleActivities: Activity[] = [
@@ -71,6 +113,24 @@ export const sampleActivities: Activity[] = [
         bookedSlots: 60
       }
     ],
+    availableSlots: [
+      {
+        id: "1-1",
+        time: "10:00 AM",
+        date: new Date(),
+        available: true,
+        totalSlots: 100,
+        bookedSlots: 45
+      },
+      {
+        id: "1-2",
+        time: "1:00 PM",
+        date: new Date(),
+        available: true,
+        totalSlots: 100,
+        bookedSlots: 60
+      }
+    ],
     contactInfo: {
       phone: "+63 (49) 541-3535",
       email: "info@enchantedkingdom.ph",
@@ -78,7 +138,11 @@ export const sampleActivities: Activity[] = [
     },
     duration: "Full day",
     instructor: "Various park staff",
-    price: 1100
+    price: 1100,
+    reviews: [...sampleReviews],
+    phone: "+63 (49) 541-3535",
+    email: "info@enchantedkingdom.ph",
+    url: "https://www.enchantedkingdom.ph"
   },
   {
     id: "2",
@@ -113,6 +177,24 @@ export const sampleActivities: Activity[] = [
         bookedSlots: 25
       }
     ],
+    availableSlots: [
+      {
+        id: "2-1",
+        time: "10:00 AM",
+        date: addDays(new Date(), 1),
+        available: true,
+        totalSlots: 80,
+        bookedSlots: 30
+      },
+      {
+        id: "2-2",
+        time: "2:00 PM",
+        date: addDays(new Date(), 1),
+        available: true,
+        totalSlots: 80,
+        bookedSlots: 25
+      }
+    ],
     contactInfo: {
       phone: "+63 (2) 8567-7777",
       email: "info@manilaoceanpark.com",
@@ -120,7 +202,11 @@ export const sampleActivities: Activity[] = [
     },
     duration: "3-4 hours",
     instructor: "Marine educators",
-    price: 990
+    price: 990,
+    reviews: [...sampleReviews],
+    phone: "+63 (2) 8567-7777",
+    email: "info@manilaoceanpark.com",
+    url: "https://www.manilaoceanpark.com"
   },
   {
     id: "3",
@@ -155,6 +241,24 @@ export const sampleActivities: Activity[] = [
         bookedSlots: 120
       }
     ],
+    availableSlots: [
+      {
+        id: "3-1",
+        time: "10:00 AM",
+        date: addDays(new Date(), 2),
+        available: true,
+        totalSlots: 120,
+        bookedSlots: 90
+      },
+      {
+        id: "3-2",
+        time: "1:00 PM",
+        date: addDays(new Date(), 2),
+        available: false,
+        totalSlots: 120,
+        bookedSlots: 120
+      }
+    ],
     contactInfo: {
       phone: "+63 (2) 8844-5539",
       email: "manila.inquiry@kidzania.com",
@@ -162,7 +266,11 @@ export const sampleActivities: Activity[] = [
     },
     duration: "5 hours",
     instructor: "Role-play supervisors",
-    price: 1200
+    price: 1200,
+    reviews: [...sampleReviews],
+    phone: "+63 (2) 8844-5539",
+    email: "manila.inquiry@kidzania.com",
+    url: "https://manila.kidzania.com"
   },
   {
     id: "4",
@@ -197,6 +305,24 @@ export const sampleActivities: Activity[] = [
         bookedSlots: 55
       }
     ],
+    availableSlots: [
+      {
+        id: "4-1",
+        time: "9:00 AM",
+        date: addDays(new Date(), 3),
+        available: true,
+        totalSlots: 100,
+        bookedSlots: 35
+      },
+      {
+        id: "4-2",
+        time: "1:00 PM",
+        date: addDays(new Date(), 3),
+        available: true,
+        totalSlots: 100,
+        bookedSlots: 55
+      }
+    ],
     contactInfo: {
       phone: "+63 (2) 7909-6463",
       email: "inquiry@themindmuseum.org",
@@ -204,7 +330,11 @@ export const sampleActivities: Activity[] = [
     },
     duration: "2-3 hours",
     instructor: "Science educators",
-    price: 825
+    price: 825,
+    reviews: [...sampleReviews],
+    phone: "+63 (2) 7909-6463",
+    email: "inquiry@themindmuseum.org",
+    url: "https://www.themindmuseum.org"
   },
   {
     id: "5",
@@ -231,6 +361,16 @@ export const sampleActivities: Activity[] = [
         bookedSlots: 12
       }
     ],
+    availableSlots: [
+      {
+        id: "5-1",
+        time: "9:00 AM",
+        date: addDays(new Date(), 4),
+        available: true,
+        totalSlots: 20,
+        bookedSlots: 12
+      }
+    ],
     contactInfo: {
       phone: "+63 (2) 8697-1015",
       email: "info@pintoartmuseum.com",
@@ -238,7 +378,11 @@ export const sampleActivities: Activity[] = [
     },
     duration: "3 hours",
     instructor: "Professional artists",
-    price: 1000
+    price: 1000,
+    reviews: [...sampleReviews],
+    phone: "+63 (2) 8697-1015",
+    email: "info@pintoartmuseum.com",
+    url: "https://www.facebook.com/pintoartmuseum"
   },
   {
     id: "6",
@@ -273,6 +417,24 @@ export const sampleActivities: Activity[] = [
         bookedSlots: 5
       }
     ],
+    availableSlots: [
+      {
+        id: "6-1",
+        time: "8:00 AM",
+        date: addDays(new Date(), 5),
+        available: true,
+        totalSlots: 30,
+        bookedSlots: 10
+      },
+      {
+        id: "6-2",
+        time: "1:00 PM",
+        date: addDays(new Date(), 5),
+        available: true,
+        totalSlots: 30,
+        bookedSlots: 5
+      }
+    ],
     contactInfo: {
       phone: "+63 (82) 271-2337",
       email: "info@philippineeaglefoundation.org",
@@ -280,7 +442,17 @@ export const sampleActivities: Activity[] = [
     },
     duration: "1-2 hours",
     instructor: "Wildlife conservationists",
-    price: 150
+    price: 150,
+    reviews: [...sampleReviews],
+    phone: "+63 (82) 271-2337",
+    email: "info@philippineeaglefoundation.org",
+    url: "https://www.philippineeaglefoundation.org"
   }
 ];
 
+// Helper function to get an activity by ID
+export function getActivity(id: string | number): Activity | undefined {
+  // Convert number ID to string if needed
+  const stringId = typeof id === 'number' ? id.toString() : id;
+  return sampleActivities.find(activity => activity.id === stringId);
+}

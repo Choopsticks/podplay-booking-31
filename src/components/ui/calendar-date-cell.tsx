@@ -2,12 +2,25 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { format, isSameDay } from "date-fns";
-import { Calendar, DateObj } from "dayzed";
+import { Calendar } from "dayzed";
 import { TimeSlot } from "@/lib/activity-data";
+
+// Extended DateObj interface with the necessary properties
+interface ExtendedDateObj {
+  date: Date;
+  selected: boolean;
+  selectable: boolean;
+  today: boolean;
+  prevMonth: boolean;
+  nextMonth: boolean;
+  getDateProps: () => {
+    onClick: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  };
+}
 
 interface CalendarDateCellProps {
   calendar: Calendar;
-  dateObj: DateObj;
+  dateObj: ExtendedDateObj;
   selectedDate: Date | null;
   slot?: TimeSlot;
   availablePercentage?: number;

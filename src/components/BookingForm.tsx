@@ -1,195 +1,330 @@
 
 import React, { useState } from "react";
-import { Activity, TimeSlot } from "@/lib/activity-data";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Activity } from "@/lib/activity-data";
+import { Button } from "./ui/button";
+import { Calendar } from "lucide-react";
 import { format } from "date-fns";
-import { toast } from "@/components/ui/use-toast";
-import { Calendar, Clock, Users } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
+import ActivityCalendar from "./ActivityCalendar";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface BookingFormProps {
   activity: Activity;
-  selectedTimeSlot: TimeSlot;
-  onClose: () => void;
 }
 
-const BookingForm: React.FC<BookingFormProps> = ({ activity, selectedTimeSlot, onClose }) => {
-  const [formData, setFormData] = useState({
-    parentName: "",
-    email: "",
-    childName: "",
-    childAge: "",
-    specialNotes: "",
-  });
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+const BookingForm: React.FC<BookingFormProps> = ({ activity }) => {
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<string | null>(null);
+  const [numTickets, setNumTickets] = useState<number>(1);
+  const [formStep, setFormStep] = useState<number>(1);
+  const [showCalendar, setShowCalendar] = useState<boolean>(false);
+
+  // Process slots with default values
+  const availableSlots = activity.availableSlots.map(slot => ({
+    ...slot,
+    totalSlots: slot.totalSlots || 10,
+    bookedSlots: slot.bookedSlots || 0
+  }));
+
+  const selectedDateSlots = selectedDate
+    ? availableSlots.filter(
+        (slot) =>
+          new Date(slot.date).toDateString() === selectedDate.toDateString()
+      )
+    : [];
+
+  const handleDateSelection = (date: Date) => {
+    setSelectedDate(date);
+    setSelectedTimeSlot(null);
+    setShowCalendar(false);
   };
-  
+
+  const handleDecreaseTickets = () => {
+    if (numTickets > 1) {
+      setNumTickets(numTickets - 1);
+    }
+  };
+
+  const handleIncreaseTickets = () => {
+    const selectedSlot = selectedDateSlots.find(
+      (slot) => `${slot.startTime}-${slot.endTime}` === selectedTimeSlot
+    );
+    
+    // Set default values if totalSlots or bookedSlots are undefined
+    const totalSlots = selectedSlot?.totalSlots || 0;
+    const bookedSlots = selectedSlot?.bookedSlots || 0;
+    const availableSlots = totalSlots - bookedSlots;
+    
+    if (numTickets < availableSlots) {
+      setNumTickets(numTickets + 1);
+    }
+  };
+
+  const handleNextStep = () => {
+    if (formStep === 1 && (!selectedDate || !selectedTimeSlot)) {
+      toast({
+        title: "Please select date and time",
+        description: "You need to select both a date and time slot to proceed.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (formStep < 3) {
+      setFormStep(formStep + 1);
+    }
+  };
+
+  const handlePreviousStep = () => {
+    if (formStep > 1) {
+      setFormStep(formStep - 1);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    toast({
+      title: "Booking confirmed!",
+      description: `You've booked ${numTickets} ticket(s) for ${activity.title} on ${format(selectedDate!, "MMMM d, yyyy")} at ${selectedTimeSlot?.split("-")[0]}.`,
+    });
     
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      toast({
-        title: "Booking Confirmed!",
-        description: `Your booking for ${activity.title} on ${format(selectedTimeSlot.date, "MMMM d")} at ${selectedTimeSlot.startTime} has been confirmed.`,
-      });
-      onClose();
-    }, 1500);
+    // Reset form
+    setSelectedDate(null);
+    setSelectedTimeSlot(null);
+    setNumTickets(1);
+    setFormStep(1);
   };
-  
+
+  // Get the duration from dateRange if duration is not available
+  const activityDuration = activity.duration || activity.dateRange;
+
   return (
-    <div className="animate-scale-in">
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-md">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-medium text-gray-900">Complete Your Booking</h3>
-          <button
-            type="button"
-            className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500"
-            onClick={onClose}
-          >
-            <span className="sr-only">Close</span>
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="mt-4 rounded-lg bg-sand-light p-4">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2">
-              <div className="flex-shrink-0">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sand">
-                  <Calendar size={18} className="text-gray-700" />
-                </div>
-              </div>
+    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <h3 className="text-xl font-medium text-gray-900 dark:text-white">Book Your Spot</h3>
+      
+      <div className="mt-4">
+        <form onSubmit={handleSubmit}>
+          {formStep === 1 && (
+            <div className="space-y-4">
               <div>
-                <div className="text-sm text-gray-500">Date & Time</div>
-                <div className="font-medium text-gray-900">
-                  {format(selectedTimeSlot.date, "MMMM d, yyyy")} • {selectedTimeSlot.startTime} - {selectedTimeSlot.endTime}
+                <label htmlFor="date" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Date
+                </label>
+                <div className="relative mt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCalendar(!showCalendar)}
+                    className="w-full justify-between border-gray-300 px-3 py-2 text-left text-gray-700 dark:border-gray-600 dark:text-gray-300"
+                  >
+                    {selectedDate ? format(selectedDate, "MMMM d, yyyy") : "Select a date"}
+                    <Calendar className="ml-2 h-4 w-4 text-gray-500 dark:text-gray-400" />
+                  </Button>
+                  
+                  {showCalendar && (
+                    <div className="absolute left-0 z-10 mt-1 w-full">
+                      <ActivityCalendar
+                        activity={activity}
+                        selectedDate={selectedDate}
+                        onDateSelect={handleDateSelection}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-shrink-0">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sand">
-                  <Users size={18} className="text-gray-700" />
+              
+              {selectedDate && (
+                <div>
+                  <label htmlFor="time" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Time
+                  </label>
+                  <Select 
+                    value={selectedTimeSlot || ""} 
+                    onValueChange={setSelectedTimeSlot}
+                  >
+                    <SelectTrigger className="mt-1 border-gray-300 dark:border-gray-600">
+                      <SelectValue placeholder="Select a time slot" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Available Times</SelectLabel>
+                        {selectedDateSlots.length > 0 ? (
+                          selectedDateSlots.map((slot) => (
+                            <SelectItem 
+                              key={`${slot.startTime}-${slot.endTime}`}
+                              value={`${slot.startTime}-${slot.endTime}`}
+                              disabled={(slot.totalSlots || 10) - (slot.bookedSlots || 0) <= 0}
+                            >
+                              {slot.startTime} - {slot.endTime} 
+                              {(slot.totalSlots || 10) - (slot.bookedSlots || 0) <= 0 && " (Fully Booked)"}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-slots" disabled>
+                            No available time slots
+                          </SelectItem>
+                        )}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Available Spots</div>
-                <div className="font-medium text-gray-900">
-                  {selectedTimeSlot.totalSlots - selectedTimeSlot.bookedSlots} of {selectedTimeSlot.totalSlots} remaining
+              )}
+              
+              {selectedTimeSlot && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Number of Participants
+                  </label>
+                  <div className="mt-1 flex items-center">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDecreaseTickets}
+                      className="h-8 w-8 rounded-full p-0 dark:border-gray-600"
+                    >
+                      -
+                    </Button>
+                    <span className="mx-4 text-gray-900 dark:text-white">{numTickets}</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleIncreaseTickets}
+                      className="h-8 w-8 rounded-full p-0 dark:border-gray-600"
+                    >
+                      +
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex-shrink-0">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sand">
-                  <Clock size={18} className="text-gray-700" />
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-500">Duration</div>
-                <div className="font-medium text-gray-900">{activity.duration}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="mt-6">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <div className="md:col-span-2">
-              <Label htmlFor="parentName">Parent/Guardian Name</Label>
-              <Input
-                id="parentName"
-                name="parentName"
-                value={formData.parentName}
-                onChange={handleChange}
-                required
-                className="mt-1"
-              />
-            </div>
-            
-            <div className="md:col-span-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="childName">Child's Name</Label>
-              <Input
-                id="childName"
-                name="childName"
-                value={formData.childName}
-                onChange={handleChange}
-                required
-                className="mt-1"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="childAge">Child's Age</Label>
-              <Input
-                id="childAge"
-                name="childAge"
-                type="number"
-                min="2"
-                max="4"
-                value={formData.childAge}
-                onChange={handleChange}
-                required
-                className="mt-1"
-              />
-            </div>
-            
-            <div className="md:col-span-2">
-              <Label htmlFor="specialNotes">Special Notes (Optional)</Label>
-              <Input
-                id="specialNotes"
-                name="specialNotes"
-                value={formData.specialNotes}
-                onChange={handleChange}
-                className="mt-1"
-                placeholder="Allergies, special needs, etc."
-              />
-            </div>
-          </div>
+          )}
           
-          <div className="mt-8 flex items-center justify-between">
-            <div className="text-xl font-medium text-gray-900">${activity.price}</div>
-            <div className="flex gap-3">
+          {formStep === 2 && (
+            <div className="space-y-4">
+              <h4 className="text-lg font-medium text-gray-900 dark:text-white">Contact Information</h4>
+              
+              <div>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Name
+                </label>
+                <Input 
+                  id="name" 
+                  type="text" 
+                  placeholder="Your full name" 
+                  required 
+                  className="mt-1 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Email
+                </label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  placeholder="Your email address" 
+                  required 
+                  className="mt-1 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Phone
+                </label>
+                <Input 
+                  id="phone" 
+                  type="tel" 
+                  placeholder="Your phone number" 
+                  required 
+                  className="mt-1 border-gray-300 dark:border-gray-600"
+                />
+              </div>
+            </div>
+          )}
+          
+          {formStep === 3 && (
+            <div className="space-y-4">
+              <h4 className="text-lg font-medium text-gray-900 dark:text-white">Booking Summary</h4>
+              
+              <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Activity:</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{activity.title}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Date:</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                      {selectedDate ? format(selectedDate, "MMMM d, yyyy") : ""}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Time:</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{selectedTimeSlot?.replace("-", " - ")}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-300">Participants:</span>
+                    <span className="text-sm font-medium text-gray-900 dark:text-white">{numTickets}</span>
+                  </div>
+                  <div className="border-t border-gray-200 pt-2 dark:border-gray-600"></div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-700 dark:text-gray-200">Total:</span>
+                    <span className="font-medium text-gray-900 dark:text-white">
+                      {activity.price ? `$${(activity.price * numTickets).toFixed(2)}` : activity.priceRange}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                By clicking "Complete Booking", you agree to our terms and conditions.
+              </div>
+            </div>
+          )}
+          
+          <div className="mt-6 flex items-center justify-between">
+            {formStep > 1 ? (
               <Button
                 type="button"
                 variant="outline"
-                onClick={onClose}
-                className="border-craft text-craft-dark hover:bg-craft-pastel hover:text-craft-dark"
+                onClick={handlePreviousStep}
+                className="border-gray-300 dark:border-gray-600 dark:text-gray-300"
               >
-                Cancel
+                Back
               </Button>
+            ) : (
+              <div></div>
+            )}
+            
+            {formStep < 3 ? (
               <Button 
-                type="submit" 
-                className="bg-craft hover:bg-craft-dark"
-                disabled={isSubmitting}
+                type="button" 
+                onClick={handleNextStep}
+                className="bg-craft hover:bg-craft-dark dark:bg-craft dark:hover:bg-craft-dark"
               >
-                {isSubmitting ? "Processing..." : "Confirm Booking"}
+                Continue
               </Button>
-            </div>
+            ) : (
+              <Button 
+                type="submit"
+                className="bg-craft hover:bg-craft-dark dark:bg-craft dark:hover:bg-craft-dark"
+              >
+                Complete Booking
+              </Button>
+            )}
           </div>
         </form>
       </div>

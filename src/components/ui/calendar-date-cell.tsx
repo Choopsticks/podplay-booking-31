@@ -1,75 +1,79 @@
 
-import * as React from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
+import { format, isSameDay } from "date-fns";
+import { Calendar, DateObj } from "dayzed";
 import { TimeSlot } from "@/lib/activity-data";
-import { format } from "date-fns";
 
-interface CalendarDateCellProps extends React.HTMLAttributes<HTMLDivElement> {
-  date: Date;
-  availableSlots: TimeSlot[];
-  selected?: boolean;
-  disabled?: boolean;
-  selectedDate: Date | undefined;
-  setSelectedDate: (date: Date) => void;
-  setSelectedTimeSlot: (timeSlot: TimeSlot | undefined) => void;
+interface CalendarDateCellProps {
+  calendar: Calendar;
+  dateObj: DateObj;
+  selectedDate: Date | null;
+  slot?: TimeSlot;
+  availablePercentage?: number;
+  totalSlots?: number;
+  bookedSlots?: number;
 }
 
-const CalendarDateCell = ({
-  date,
-  availableSlots,
-  selected,
-  disabled,
+export const CalendarDateCell: React.FC<CalendarDateCellProps> = ({
+  calendar,
+  dateObj,
   selectedDate,
-  setSelectedDate,
-  setSelectedTimeSlot,
-  className,
-  ...props
-}: CalendarDateCellProps) => {
-  const slotsForThisDate = availableSlots.filter(
-    (slot) => format(slot.date, "yyyy-MM-dd") === format(date, "yyyy-MM-dd")
-  );
-  
-  const hasSlots = slotsForThisDate.length > 0;
-  const totalAvailableSlots = slotsForThisDate.reduce(
-    (acc, slot) => acc + (slot.totalSlots - slot.bookedSlots),
-    0
-  );
+  slot,
+  availablePercentage,
+  totalSlots = 0,
+  bookedSlots = 0,
+}) => {
+  const isSelected = selectedDate
+    ? isSameDay(dateObj.date, selectedDate)
+    : false;
 
-  const handleClick = () => {
-    if (!disabled && hasSlots) {
-      setSelectedDate(date);
-      setSelectedTimeSlot(undefined);
-    }
+  const isToday = isSameDay(dateObj.date, new Date());
+
+  // Handle dates in the past
+  const isPastDate = dateObj.date < new Date(new Date().setHours(0, 0, 0, 0));
+
+  // Calculate availability percentage if not provided
+  const calculatedAvailability = totalSlots > 0 ? ((totalSlots - bookedSlots) / totalSlots) * 100 : 0;
+  const availability = availablePercentage !== undefined ? availablePercentage : calculatedAvailability;
+
+  // Get color based on availability
+  const getAvailabilityColor = () => {
+    if (availability <= 0) return "bg-red-500 dark:bg-red-700";
+    if (availability <= 30) return "bg-orange-500 dark:bg-orange-700";
+    return "bg-green-500 dark:bg-green-700";
   };
 
   return (
-    <div
+    <button
+      disabled={isPastDate || !slot}
       className={cn(
-        "flex h-8 w-8 sm:h-11 sm:w-11 items-center justify-center rounded-full text-sm transition-all",
-        hasSlots ? "cursor-pointer hover:bg-craft-pastel" : "cursor-not-allowed opacity-50",
-        selected && "bg-craft text-white hover:bg-craft-dark",
-        !selected && !disabled && "text-gray-700",
-        disabled && "text-gray-400",
-        className
+        "relative flex aspect-square cursor-pointer flex-col items-center justify-center rounded-md text-sm font-medium transition-colors",
+        isSelected
+          ? "bg-craft text-white dark:bg-craft"
+          : isToday
+          ? "bg-craft-pastel text-craft-dark dark:bg-craft-dark/30 dark:text-craft-light"
+          : !slot
+          ? "cursor-default text-gray-400 dark:text-gray-600"
+          : isPastDate
+          ? "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600"
+          : "hover:bg-gray-100 dark:hover:bg-gray-700",
+        "focus:outline-none focus:ring-2 focus:ring-craft focus:ring-offset-2"
       )}
-      onClick={handleClick}
-      {...props}
+      key={dateObj.date.toString()}
+      onClick={() => dateObj.selectable && dateObj.getDateProps().onClick()}
+      type="button"
     >
-      <div className="flex flex-col items-center">
-        <span>{format(date, "d")}</span>
-        {hasSlots && (
-          <span 
-            className={cn(
-              "mt-0.5 text-[8px] sm:text-[10px] font-medium",
-              selected ? "text-white" : "text-craft-dark"
-            )}
-          >
-            {totalAvailableSlots} slot{totalAvailableSlots !== 1 ? "s" : ""}
-          </span>
-        )}
-      </div>
-    </div>
+      <span>{format(dateObj.date, "d")}</span>
+      
+      {slot && !isPastDate && !isSelected && (
+        <div
+          className={cn(
+            "absolute bottom-1 h-1 w-4 rounded-full",
+            getAvailabilityColor()
+          )}
+        ></div>
+      )}
+    </button>
   );
 };
-
-export { CalendarDateCell };

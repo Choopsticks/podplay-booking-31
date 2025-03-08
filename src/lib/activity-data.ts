@@ -1,4 +1,3 @@
-
 export interface Review {
   id: number;
   author: string;
@@ -13,6 +12,8 @@ export interface TimeSlot {
   date: Date;
   startTime: string;
   endTime: string;
+  totalSlots?: number;  // Added for backward compatibility
+  bookedSlots?: number; // Added for backward compatibility
 }
 
 export interface Activity {
@@ -32,7 +33,15 @@ export interface Activity {
   availableSlots: TimeSlot[];
   categories: string[];
   rating: number;
+  duration?: string;    // Added for backward compatibility
+  instructor?: string;  // Added for backward compatibility
+  price?: number;       // Added for backward compatibility
 }
+
+// Method to get a single activity
+export const getActivity = (id: number): Activity | undefined => {
+  return sampleActivities.find(activity => activity.id === id);
+};
 
 export const sampleActivities: Activity[] = [
   {
@@ -301,8 +310,3 @@ export const sampleActivities: Activity[] = [
     rating: 4.7
   }
 ];
-
-// Method to get a single activity
-export const getActivity = (id: number): Activity | undefined => {
-  return sampleActivities.find(activity => activity.id === id);
-};

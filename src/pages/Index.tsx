@@ -1,45 +1,31 @@
 
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { sampleActivities, sampleCompanies } from "@/lib/activity-data";
+import { sampleActivities } from "@/lib/activity-data";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import { Search, MapPin, Calendar, Star, Filter, Building } from "lucide-react";
+import { Search, MapPin, Calendar, Star, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showCompanies, setShowCompanies] = useState(true);
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
 
-  // Get all unique categories
   const categories = Array.from(
     new Set(sampleActivities.flatMap(activity => activity.categories))
   );
 
-  // Filter activities based on search and category
   const filteredActivities = sampleActivities.filter(activity => {
     const matchesSearch = activity.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           activity.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           activity.location.toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesCategory = selectedCategory ? activity.categories.includes(selectedCategory) : true;
-    
-    return matchesSearch && matchesCategory;
-  });
-
-  // Filter companies based on search and category
-  const filteredCompanies = sampleCompanies.filter(company => {
-    const matchesSearch = company.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          company.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          company.location.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory = selectedCategory ? company.categories.includes(selectedCategory) : true;
     
     return matchesSearch && matchesCategory;
   });
@@ -155,29 +141,7 @@ const Index = () => {
       <section className="py-12 bg-white dark:bg-gray-800">
         <div className="container">
           <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-medium text-gray-900 dark:text-white">
-                {showCompanies ? "Featured Companies" : "Featured Activities"}
-              </h2>
-              <div className="flex border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
-                <Button 
-                  variant={showCompanies ? "default" : "ghost"}
-                  size="sm"
-                  className={`rounded-none ${showCompanies ? 'bg-craft hover:bg-craft-dark' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
-                  onClick={() => setShowCompanies(true)}
-                >
-                  Companies
-                </Button>
-                <Button 
-                  variant={!showCompanies ? "default" : "ghost"}
-                  size="sm"
-                  className={`rounded-none ${!showCompanies ? 'bg-craft hover:bg-craft-dark' : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'}`}
-                  onClick={() => setShowCompanies(false)}
-                >
-                  Activities
-                </Button>
-              </div>
-            </div>
+            <h2 className="text-2xl font-medium text-gray-900 dark:text-white">Featured Activities</h2>
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" className="flex items-center gap-1 border-craft text-craft-dark dark:border-craft-light dark:text-craft-light">
                 <Filter size={16} />
@@ -204,131 +168,70 @@ const Index = () => {
             ))}
           </div>
 
-          {showCompanies ? (
-            // Companies Grid
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredCompanies.map((company) => (
-                <Link 
-                  key={company.id}
-                  to={`/company/${company.id}`}
-                  className="group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-300 h-full flex flex-col"
-                >
-                  <div className="aspect-[4/3] relative overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-700 w-full">
-                    <img
-                      src={`${company.logo}?w=600&h=450&fit=crop&auto=format&q=75`}
-                      alt={company.name}
-                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105 h-full w-full"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-70"></div>
-                    <div className="absolute bottom-3 left-3 flex space-x-1">
-                      {company.categories.slice(0, 2).map((category, idx) => (
-                        <Badge key={idx} className="bg-craft/80 text-white text-xs">
-                          {category}
-                        </Badge>
-                      ))}
+          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredActivities.map((activity) => (
+              <Link 
+                key={activity.id}
+                to={`/activity/${activity.id}`}
+                className="group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-300 h-full flex flex-col"
+              >
+                <div className="aspect-[4/3] relative overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-700 w-full">
+                  <img
+                    src={`${activity.imageUrls[0]}?w=600&h=450&fit=crop&auto=format&q=75`}
+                    alt={activity.title}
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105 h-full w-full"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-70"></div>
+                  <div className="absolute bottom-3 left-3 flex space-x-1">
+                    {activity.categories.slice(0, 2).map((category, idx) => (
+                      <Badge key={idx} className="bg-craft/80 text-white text-xs">
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                <div className="p-6 flex-grow flex flex-col">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="inline-block rounded-full bg-craft-pastel dark:bg-craft-dark/30 px-3 py-1 text-xs font-medium text-craft-dark dark:text-craft-light">
+                      {activity.ageRange}
+                    </span>
+                    <div className="flex items-center">
+                      <Star size={16} className="fill-yellow-400 text-yellow-400 mr-1" />
+                      <span className="text-sm font-medium">{activity.rating.toFixed(1)}</span>
                     </div>
                   </div>
-                  <div className="p-6 flex-grow flex flex-col">
-                    <div className="flex items-center mb-2">
-                      <div className="flex items-center">
-                        <Star size={16} className="fill-yellow-400 text-yellow-400 mr-1" />
-                        <span className="text-sm font-medium">{company.rating.toFixed(1)}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">({company.reviewCount} reviews)</span>
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-medium text-gray-900 dark:text-white line-clamp-1">{company.name}</h3>
-                    <div className="mt-2 flex items-center text-gray-500 dark:text-gray-400">
-                      <MapPin size={16} className="mr-1 flex-shrink-0" />
-                      <span className="text-sm truncate">{company.location}</span>
-                    </div>
-                    <div className="mt-2 flex items-center text-gray-500 dark:text-gray-400">
-                      <Building size={16} className="mr-1 flex-shrink-0" />
-                      <span className="text-sm">Multiple Activities</span>
-                    </div>
-                    <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 flex-grow">{company.description}</p>
-                    <div className="mt-4 flex justify-end">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-craft dark:text-craft-light hover:text-craft-dark dark:hover:text-craft hover:bg-craft-pastel dark:hover:bg-craft-dark/30"
-                      >
-                        View Company →
-                      </Button>
-                    </div>
+                  <h3 className="text-xl font-medium text-gray-900 dark:text-white line-clamp-2 h-14">{activity.title}</h3>
+                  <div className="mt-2 flex items-center text-gray-500 dark:text-gray-400">
+                    <MapPin size={16} className="mr-1 flex-shrink-0" />
+                    <span className="text-sm truncate">{activity.location}</span>
                   </div>
-                </Link>
-              ))}
-            </div>
-          ) : (
-            // Activities Grid
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredActivities.map((activity) => (
-                <Link 
-                  key={activity.id}
-                  to={`/activity/${activity.id}`}
-                  className="group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-300 h-full flex flex-col"
-                >
-                  <div className="aspect-[4/3] relative overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-700 w-full">
-                    <img
-                      src={`${activity.imageUrls[0]}?w=600&h=450&fit=crop&auto=format&q=75`}
-                      alt={activity.title}
-                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-105 h-full w-full"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-70"></div>
-                    <div className="absolute bottom-3 left-3 flex space-x-1">
-                      {activity.categories.slice(0, 2).map((category, idx) => (
-                        <Badge key={idx} className="bg-craft/80 text-white text-xs">
-                          {category}
-                        </Badge>
-                      ))}
-                    </div>
+                  <div className="mt-2 flex items-center text-gray-500 dark:text-gray-400">
+                    <Calendar size={16} className="mr-1 flex-shrink-0" />
+                    <span className="text-sm truncate">{activity.dateRange}</span>
                   </div>
-                  <div className="p-6 flex-grow flex flex-col">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="inline-block rounded-full bg-craft-pastel dark:bg-craft-dark/30 px-3 py-1 text-xs font-medium text-craft-dark dark:text-craft-light">
-                        {activity.ageRange}
-                      </span>
-                      <div className="flex items-center">
-                        <Star size={16} className="fill-yellow-400 text-yellow-400 mr-1" />
-                        <span className="text-sm font-medium">{activity.rating.toFixed(1)}</span>
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-medium text-gray-900 dark:text-white line-clamp-2 h-14">{activity.title}</h3>
-                    <div className="mt-2 flex items-center text-gray-500 dark:text-gray-400">
-                      <MapPin size={16} className="mr-1 flex-shrink-0" />
-                      <span className="text-sm truncate">{activity.location}</span>
-                    </div>
-                    <div className="mt-2 flex items-center text-gray-500 dark:text-gray-400">
-                      <Calendar size={16} className="mr-1 flex-shrink-0" />
-                      <span className="text-sm truncate">{activity.dateRange}</span>
-                    </div>
-                    <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 flex-grow">{activity.description}</p>
-                    <div className="mt-4 flex items-center justify-between">
-                      <span className="font-medium text-gray-900 dark:text-white">{activity.priceRange}</span>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="text-craft dark:text-craft-light hover:text-craft-dark dark:hover:text-craft hover:bg-craft-pastel dark:hover:bg-craft-dark/30"
-                      >
-                        View Details →
-                      </Button>
-                    </div>
+                  <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 flex-grow">{activity.description}</p>
+                  <div className="mt-4 flex items-center justify-between">
+                    <span className="font-medium text-gray-900 dark:text-white">{activity.priceRange}</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="text-craft dark:text-craft-light hover:text-craft-dark dark:hover:text-craft hover:bg-craft-pastel dark:hover:bg-craft-dark/30"
+                    >
+                      View Details →
+                    </Button>
                   </div>
-                </Link>
-              ))}
-            </div>
-          )}
+                </div>
+              </Link>
+            ))}
+          </div>
 
-          {(showCompanies && filteredCompanies.length === 0) || (!showCompanies && filteredActivities.length === 0) ? (
+          {filteredActivities.length === 0 && (
             <div className="text-center py-12">
-              <h3 className="text-xl font-medium text-gray-900 dark:text-white">
-                No {showCompanies ? "companies" : "activities"} found
-              </h3>
+              <h3 className="text-xl font-medium text-gray-900 dark:text-white">No activities found</h3>
               <p className="mt-2 text-gray-600 dark:text-gray-300">Try changing your search or filter criteria</p>
             </div>
-          ) : null}
+          )}
         </div>
       </section>
 

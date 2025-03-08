@@ -5,7 +5,7 @@ import { format, isEqual, getMonth, getYear } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { TimeSlot, Activity, ExtendedDateObj } from "@/lib/activity-data";
+import { TimeSlot, Activity } from "@/lib/activity-data";
 import { CalendarDateCell } from "@/components/ui/calendar-date-cell";
 import { cn } from "@/lib/utils";
 
@@ -39,8 +39,8 @@ const ActivityCalendar: React.FC<CalendarProps> = ({
 }) => {
   const [offset, setOffset] = useState(0);
 
-  // Ensure availableSlots exists before mapping
-  const slots = (activity.availableSlots || []).map(slot => ({
+  // Prepare slots with default values for totalSlots and bookedSlots
+  const slots = activity.availableSlots.map(slot => ({
     ...slot,
     totalSlots: slot.totalSlots || 10,
     bookedSlots: slot.bookedSlots || 0
@@ -125,9 +125,7 @@ const ActivityCalendar: React.FC<CalendarProps> = ({
                   );
                 }
 
-                // Cast dateObj to ExtendedDateObj to ensure TypeScript knows getDateProps exists
-                const extendedDateObj = dateObj as unknown as ExtendedDateObj;
-                const slot = getSlotForDate(extendedDateObj.date);
+                const slot = getSlotForDate(dateObj.date);
                 
                 // Use default values for bookedSlots and totalSlots if not provided
                 const bookedSlots = slot?.bookedSlots || 0;
@@ -136,9 +134,9 @@ const ActivityCalendar: React.FC<CalendarProps> = ({
                 
                 return (
                   <CalendarDateCell
-                    key={extendedDateObj.date.toString()}
+                    key={dateObj.date.toString()}
                     calendar={calendar}
-                    dateObj={extendedDateObj}
+                    dateObj={dateObj}
                     selectedDate={selectedDate}
                     slot={slot}
                     // Ensure we pass props with defaults

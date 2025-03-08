@@ -13,61 +13,56 @@ const ActivityHero: React.FC<ActivityHeroProps> = ({ activity, handleBookNowClic
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const averageRating = activity.reviews.reduce((acc, review) => acc + review.rating, 0) / activity.reviews.length;
   
-  // Provide fallbacks for potentially undefined properties
-  const duration = activity.duration || activity.dateRange;
-  const instructor = activity.instructor || "Local guides";
-  const price = activity.price ? `$${activity.price}` : activity.priceRange;
-  
   return (
-    <section className="relative overflow-hidden bg-white dark:bg-gray-800">
+    <section className="relative overflow-hidden bg-white">
       <div className="container py-8 md:py-12">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
           <div className="order-2 lg:order-1">
             <div className="space-y-4 animate-fade-up" style={{ animationDelay: "0.1s" }}>
               <div className="flex flex-wrap gap-2">
-                <span className="inline-flex items-center rounded-full bg-craft-pastel px-3 py-0.5 text-sm font-medium text-craft-dark dark:bg-craft-dark/30 dark:text-craft-light">
+                <span className="inline-flex items-center rounded-full bg-craft-pastel px-3 py-0.5 text-sm font-medium text-craft-dark">
                   {activity.ageRange}
                 </span>
-                <span className="inline-flex items-center rounded-full bg-sand-light px-3 py-0.5 text-sm font-medium text-sand-dark dark:bg-gray-700 dark:text-gray-300">
-                  {duration}
+                <span className="inline-flex items-center rounded-full bg-sand-light px-3 py-0.5 text-sm font-medium text-sand-dark">
+                  {activity.duration}
                 </span>
               </div>
               
-              <h1 className="text-3xl font-medium text-gray-900 md:text-4xl dark:text-white">{activity.title}</h1>
+              <h1 className="text-3xl font-medium text-gray-900 md:text-4xl">{activity.title}</h1>
               
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-1">
                   <Star size={16} className="fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">{averageRating.toFixed(1)}</span>
-                  <span className="text-sm text-gray-500 dark:text-gray-400">({activity.reviews.length} reviews)</span>
+                  <span className="text-sm font-medium text-gray-900">{averageRating.toFixed(1)}</span>
+                  <span className="text-sm text-gray-500">({activity.reviews.length} reviews)</span>
                 </div>
-                <div className="h-4 w-px bg-gray-300 dark:bg-gray-600"></div>
-                <div className="text-sm text-gray-600 dark:text-gray-300">with {instructor}</div>
+                <div className="h-4 w-px bg-gray-300"></div>
+                <div className="text-sm text-gray-600">with {activity.instructor}</div>
               </div>
               
-              <p className="text-lg text-gray-700 dark:text-gray-300">{activity.description}</p>
+              <p className="text-lg text-gray-700">{activity.description}</p>
               
               <div className="flex flex-wrap items-center gap-4 pt-2">
                 <div className="flex items-center gap-2">
-                  <Users size={18} className="text-craft-dark dark:text-craft-light" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Small groups (max 8 children)</span>
+                  <Users size={18} className="text-craft-dark" />
+                  <span className="text-sm text-gray-700">Small groups (max 8 children)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock size={18} className="text-craft-dark dark:text-craft-light" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{duration} sessions</span>
+                  <Clock size={18} className="text-craft-dark" />
+                  <span className="text-sm text-gray-700">{activity.duration} sessions</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CalendarIcon size={18} className="text-craft-dark dark:text-craft-light" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Flexible scheduling</span>
+                  <CalendarIcon size={18} className="text-craft-dark" />
+                  <span className="text-sm text-gray-700">Flexible scheduling</span>
                 </div>
               </div>
               
               <div className="flex items-center gap-4 pt-4">
-                <div className="text-2xl font-medium text-gray-900 dark:text-white">{price}</div>
+                <div className="text-2xl font-medium text-gray-900">${activity.price}</div>
                 <Button 
                   onClick={handleBookNowClick} 
                   size="lg"
-                  className="bg-craft hover:bg-craft-dark transition-all duration-300 dark:bg-craft dark:hover:bg-craft-dark"
+                  className="bg-craft hover:bg-craft-dark transition-all duration-300"
                 >
                   Book Now
                 </Button>
@@ -76,7 +71,7 @@ const ActivityHero: React.FC<ActivityHeroProps> = ({ activity, handleBookNowClic
           </div>
           
           <div className="order-1 lg:order-2">
-            <div className="relative aspect-h-3 aspect-w-5 overflow-hidden rounded-xl bg-gray-50 animate-fade-in dark:bg-gray-700" style={{ animationDelay: "0.2s" }}>
+            <div className="relative aspect-h-3 aspect-w-5 overflow-hidden rounded-xl bg-gray-50 animate-fade-in" style={{ animationDelay: "0.2s" }}>
               {activity.imageUrls.map((url, index) => (
                 <img
                   key={index}

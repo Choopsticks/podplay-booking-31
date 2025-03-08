@@ -1,156 +1,160 @@
 
 import React, { useState } from "react";
-import { useDayzed } from "dayzed";
-import { format, isEqual, getMonth, getYear } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { TimeSlot, Activity } from "@/lib/activity-data";
+import { format, isSameDay, isToday, isAfter } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Activity, TimeSlot } from "@/lib/activity-data";
 import { CalendarDateCell } from "@/components/ui/calendar-date-cell";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
-const monthNamesShort = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-const weekdayNamesShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-interface CalendarProps {
+interface ActivityCalendarProps {
   activity: Activity;
-  selectedDate: Date | null;
-  onDateSelect: (date: Date) => void;
+  onSelectTimeSlot: (slot: TimeSlot) => void;
 }
 
-const ActivityCalendar: React.FC<CalendarProps> = ({
-  activity,
-  selectedDate,
-  onDateSelect,
-}) => {
-  const [offset, setOffset] = useState(0);
-
-  // Prepare slots with default values for totalSlots and bookedSlots
-  const slots = activity.availableSlots.map(slot => ({
-    ...slot,
-    totalSlots: slot.totalSlots || 10,
-    bookedSlots: slot.bookedSlots || 0
-  }));
-
-  const dayzedData = useDayzed({
-    date: new Date(),
-    selected: selectedDate ? new Date(selectedDate) : undefined,
-    onDateSelected: ({ date }) => {
-      onDateSelect(new Date(date));
-    },
-    offset,
-    monthsToDisplay: 1,
-  });
-
-  const { calendars, getBackProps, getForwardProps } = dayzedData;
-
-  if (!calendars.length) return null;
-
-  const getSlotForDate = (date: Date): TimeSlot | undefined => {
-    return slots.find((slot) =>
-      isEqual(
-        new Date(slot.date).setHours(0, 0, 0, 0),
-        new Date(date).setHours(0, 0, 0, 0)
-      )
-    );
+const ActivityCalendar: React.FC<ActivityCalendarProps> = ({ activity, onSelectTimeSlot }) => {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<TimeSlot | undefined>(undefined);
+  
+  const availableSlots = activity.availableSlots;
+  
+  const slotsForSelectedDate = selectedDate 
+    ? availableSlots.filter(slot => isSameDay(slot.date, selectedDate))
+    : [];
+  
+  const hasAvailableDates = availableSlots.some(slot => 
+    isAfter(slot.date, new Date()) || isToday(slot.date)
+  );
+  
+  const handleTimeSlotSelect = (slot: TimeSlot) => {
+    setSelectedTimeSlot(slot);
   };
-
+  
+  const handleBookTimeSlot = () => {
+    if (selectedTimeSlot) {
+      onSelectTimeSlot(selectedTimeSlot);
+    }
+  };
+  
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Button
-          variant="outline"
-          size="icon"
-          {...getBackProps({ calendars })}
-          className="h-8 w-8 rounded-full dark:border-gray-600 dark:text-gray-300"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-
-        <h3 className="text-base font-medium text-gray-900 dark:text-white">
-          {monthNamesShort[getMonth(calendars[0].month)]} {getYear(calendars[0].month)}
-        </h3>
-
-        <Button
-          variant="outline"
-          size="icon"
-          {...getForwardProps({ calendars })}
-          className="h-8 w-8 rounded-full dark:border-gray-600 dark:text-gray-300"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <Card className="border-gray-200 p-4 dark:border-gray-700 dark:bg-gray-800">
-        <div className="mb-2 grid grid-cols-7 gap-1 text-center">
-          {weekdayNamesShort.map((day) => (
-            <div
-              key={day}
-              className="text-xs font-medium text-gray-500 dark:text-gray-400"
-            >
-              {day.charAt(0)}
-            </div>
-          ))}
-        </div>
-
-        {calendars.map((calendar) => (
-          <div
-            key={`${calendar.month}-${calendar.year}`}
-            className="grid grid-cols-7 gap-1"
-          >
-            {calendar.weeks.map((week, weekIndex) =>
-              week.map((dateObj, weekdayIndex) => {
-                if (!dateObj) {
-                  return (
-                    <div
-                      key={`${calendar.month}-${calendar.year}-${weekIndex}-${weekdayIndex}-empty`}
-                      className={cn(
-                        "aspect-square cursor-default text-center"
-                      )}
+    <section className="bg-sand-light py-12" id="booking">
+      <div className="container px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl">
+          <div className="rounded-xl border border-sand/50 bg-white p-4 sm:p-6 shadow-sm">
+            <h2 className="text-2xl font-medium text-gray-900">Select Date & Time</h2>
+            <p className="mt-2 text-gray-600">Choose from available slots below</p>
+            
+            <div className="mt-6 grid grid-cols-1 gap-8 md:grid-cols-2">
+              <div className="animate-fade-up overflow-x-auto" style={{ animationDelay: "0.3s" }}>
+                <div className="rounded-lg border border-gray-200 bg-white p-2 sm:p-3 min-w-[280px]">
+                  {hasAvailableDates ? (
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        if (date) setSelectedDate(date);
+                        setSelectedTimeSlot(undefined);
+                      }}
+                      disabled={(date) => {
+                        // Disable past dates
+                        if (date < new Date() && !isToday(date)) return true;
+                        
+                        // Check if there are any slots available for this date
+                        return !availableSlots.some(slot => 
+                          isSameDay(slot.date, date)
+                        );
+                      }}
+                      className="rounded-md"
+                      components={{
+                        Day: (props) => (
+                          <CalendarDateCell
+                            {...props}
+                            availableSlots={availableSlots}
+                            selectedDate={selectedDate}
+                            setSelectedDate={setSelectedDate}
+                            setSelectedTimeSlot={setSelectedTimeSlot}
+                          />
+                        ),
+                      }}
                     />
-                  );
-                }
-
-                const slot = getSlotForDate(dateObj.date);
-                
-                // Use default values for bookedSlots and totalSlots if not provided
-                const bookedSlots = slot?.bookedSlots || 0;
-                const totalSlots = slot?.totalSlots || 0;
-                const availablePercentage = totalSlots > 0 ? ((totalSlots - bookedSlots) / totalSlots) * 100 : 0;
-                
-                return (
-                  <CalendarDateCell
-                    key={dateObj.date.toString()}
-                    calendar={calendar}
-                    dateObj={dateObj}
-                    selectedDate={selectedDate}
-                    slot={slot}
-                    // Ensure we pass props with defaults
-                    availablePercentage={availablePercentage}
-                    bookedSlots={bookedSlots}
-                    totalSlots={totalSlots}
-                  />
-                );
-              })
-            )}
+                  ) : (
+                    <div className="flex h-full items-center justify-center py-8 text-center">
+                      <p className="text-gray-500">No available dates at the moment</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="animate-fade-up" style={{ animationDelay: "0.4s" }}>
+                <div className="rounded-lg border border-gray-200 bg-white p-4 sm:p-6">
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {selectedDate ? (
+                      <>Available Times for {format(selectedDate, "MMMM d, yyyy")}</>
+                    ) : (
+                      <>Select a date to see available times</>
+                    )}
+                  </h3>
+                  
+                  {selectedDate && slotsForSelectedDate.length > 0 ? (
+                    <div className="mt-4 space-y-3">
+                      {slotsForSelectedDate.map((slot) => {
+                        const isSlotFull = slot.bookedSlots >= slot.totalSlots;
+                        const availableSpots = slot.totalSlots - slot.bookedSlots;
+                        const isSelected = selectedTimeSlot?.id === slot.id;
+                        
+                        return (
+                          <div
+                            key={slot.id}
+                            className={`
+                              flex cursor-pointer items-center justify-between rounded-lg border p-4 transition-all
+                              ${isSlotFull ? 'border-gray-200 bg-gray-50 opacity-60' : isSelected ? 'border-craft bg-craft-pastel' : 'border-gray-200 hover:border-craft-light hover:bg-craft-pastel/30'}
+                            `}
+                            onClick={() => !isSlotFull && handleTimeSlotSelect(slot)}
+                          >
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {slot.startTime} - {slot.endTime}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                {isSlotFull 
+                                  ? 'Fully booked' 
+                                  : `${availableSpots} spot${availableSpots !== 1 ? 's' : ''} available`}
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <div className="h-3 w-3 rounded-full bg-craft"></div>
+                            )}
+                          </div>
+                        );
+                      })}
+                      
+                      <Button
+                        className="mt-6 w-full bg-craft hover:bg-craft-dark disabled:opacity-50"
+                        size="lg"
+                        disabled={!selectedTimeSlot}
+                        onClick={handleBookTimeSlot}
+                      >
+                        {selectedTimeSlot ? 'Book Selected Time' : 'Select a Time'}
+                      </Button>
+                    </div>
+                  ) : selectedDate ? (
+                    <div className="mt-8 text-center text-gray-500">
+                      No available times for this date
+                    </div>
+                  ) : (
+                    <div className="mt-8 flex h-32 items-center justify-center text-gray-500">
+                      <div className="text-center">
+                        <p>Please select a date from the calendar</p>
+                        <p className="mt-2 text-sm">Dates with available slots are highlighted</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        ))}
-      </Card>
-    </div>
+        </div>
+      </div>
+    </section>
   );
 };
 

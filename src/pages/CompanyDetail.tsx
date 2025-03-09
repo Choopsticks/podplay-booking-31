@@ -1,308 +1,265 @@
-
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { 
-  getCompany, 
-  getActivitiesByCompany, 
-  Company, 
-  Activity 
-} from "@/lib/activity-data";
-import { Badge } from "@/components/ui/badge";
+import { getCompany, getActivitiesByCompany, Company, Activity } from "@/lib/activity-data";
+import { MapPin, Phone, Mail, Globe, ChevronRight, Filter, Users, DollarSign, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  MapPin, 
-  Calendar, 
-  Star, 
-  Phone, 
-  Mail, 
-  Globe, 
-  Filter 
-} from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Separator } from "@/components/ui/separator";
-import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 
 const CompanyDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const company = getCompany(id);
-  const allActivities = getActivitiesByCompany(id);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { toast } = useToast();
-  
-  // Get unique categories across all activities
-  const uniqueCategories = Array.from(
-    new Set(allActivities.flatMap(activity => activity.categories))
-  ).sort();
-  
-  // Filter activities based on selected category
-  const filteredActivities = selectedCategory
-    ? allActivities.filter(activity => 
-        activity.categories.includes(selectedCategory)
-      )
-    : allActivities;
+  const [company, setCompany] = useState<Company | undefined>(undefined);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [filteredActivities, setFilteredActivities] = useState<Activity[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [uniqueCategories, setUniqueCategories] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (id) {
+      const companyData = getCompany(id);
+      const activitiesData = getActivitiesByCompany(id);
+      
+      setCompany(companyData);
+      setActivities(activitiesData);
+      setFilteredActivities(activitiesData);
+      
+      // Extract unique categories
+      const categories = activitiesData.flatMap(activity => activity.categories);
+      setUniqueCategories([...new Set(categories)]);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (selectedCategories.length === 0) {
+      setFilteredActivities(activities);
+    } else {
+      setFilteredActivities(
+        activities.filter(activity => 
+          activity.categories.some(category => selectedCategories.includes(category))
+        )
+      );
+    }
+  }, [selectedCategories, activities]);
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(category)
+        ? prev.filter(cat => cat !== category)
+        : [...prev, category]
+    );
+  };
 
   if (!company) {
     return (
-      <div className="container py-20 text-center">
-        <h1 className="text-3xl font-bold mb-4">Company Not Found</h1>
-        <p className="mb-8">The company you're looking for doesn't exist or has been removed.</p>
-        <Link to="/">
-          <Button>Return to Home</Button>
-        </Link>
+      <div className="container mx-auto py-20 text-center">
+        <h1 className="text-3xl font-bold text-craft-dark mb-4">Company Not Found</h1>
+        <p className="text-gray-600 mb-8">The company you're looking for doesn't exist or has been removed.</p>
+        <Button asChild>
+          <Link to="/">Return to Home</Link>
+        </Button>
       </div>
     );
   }
 
-  // Helper function to get category color class
-  const getCategoryColorClass = (category: string) => {
-    const categoryMap: Record<string, string> = {
-      "Theme Park": "bg-craft-coral/20 text-craft-coral hover:bg-craft-coral/30",
-      "Educational": "bg-craft-blue/20 text-craft-blue hover:bg-craft-blue/30",
-      "Arts & Crafts": "bg-craft-purple/20 text-craft-purple hover:bg-craft-purple/30",
-      "Outdoor": "bg-craft-green/20 text-craft-green hover:bg-craft-green/30",
-      "Indoor": "bg-craft-yellow/20 text-craft-yellow hover:bg-craft-yellow/30",
-      "Wildlife": "bg-craft-teal/20 text-craft-teal hover:bg-craft-teal/30",
-      "Entertainment": "bg-craft-pink/20 text-craft-pink hover:bg-craft-pink/30",
-      "Role-play": "bg-craft-purple/20 text-craft-purple hover:bg-craft-purple/30",
-      "Science": "bg-craft-blue/20 text-craft-blue hover:bg-craft-blue/30",
-      "Museum": "bg-craft-teal/20 text-craft-teal hover:bg-craft-teal/30",
-      "Marine Life": "bg-craft-blue/20 text-craft-blue hover:bg-craft-blue/30",
-      "Family": "bg-craft-yellow/20 text-craft-yellow hover:bg-craft-yellow/30",
-    };
-    
-    return categoryMap[category] || "bg-gray-200 text-gray-700 hover:bg-gray-300";
-  };
-
-  const handleContactClick = (type: string, value: string) => {
-    navigator.clipboard.writeText(value).then(() => {
-      toast({
-        title: "Contact Information Copied",
-        description: `${value} has been copied to your clipboard.`,
-        duration: 3000,
-      });
-    });
-  };
-
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen pb-20">
+    <div className="min-h-screen bg-craft-light/10">
       {/* Company Banner */}
-      <div className="relative h-64 md:h-96 bg-gradient-to-r from-craft-dark to-craft-dark/80 overflow-hidden">
-        <div className="absolute inset-0 bg-opacity-60 bg-black flex items-center">
-          <div className="container">
-            <div className="max-w-3xl">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{company.name}</h1>
-              <div className="flex items-center mb-4">
-                <MapPin className="text-white mr-2" size={18} />
-                <span className="text-white">{company.location}</span>
-                <span className="mx-2 text-white">•</span>
-                <div className="flex items-center">
-                  <Star className="text-yellow-400 mr-1" size={18} />
-                  <span className="text-white">{company.rating.toFixed(1)}</span>
-                  <span className="text-white ml-1">({company.reviewCount} reviews)</span>
-                </div>
-              </div>
-              <p className="text-white text-opacity-90 text-lg max-w-xl">{company.description}</p>
+      <div className="relative w-full h-[300px] bg-craft-dark overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-40" 
+          style={{ backgroundImage: `url(${company.logo})` }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent to-craft-dark/90" />
+        <div className="container mx-auto h-full flex items-end pb-10 relative z-10">
+          <div className="text-white">
+            <h1 className="text-3xl md:text-4xl font-bold">{company.name}</h1>
+            <div className="flex items-center mt-2">
+              <MapPin size={18} className="mr-1" />
+              <span>{company.location}</span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="container mt-8">
-        {/* Company Info Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>About {company.name}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-700 dark:text-gray-300">
-                  {company.description}
-                </p>
+      {/* Company Details */}
+      <div className="container mx-auto py-8">
+        <div className="flex flex-col md:flex-row gap-8">
+          {/* Company Information */}
+          <div className="md:w-1/3 space-y-6">
+            <Card className="p-6 bg-white border-craft-light shadow-sm">
+              <h2 className="text-2xl font-semibold text-craft-dark mb-4">About {company.name}</h2>
+              <p className="text-gray-700 mb-6">{company.description}</p>
+              
+              <h3 className="text-lg font-medium text-craft-dark mb-3">Contact Information</h3>
+              <ul className="space-y-3">
+                {company.contactInfo.phone && (
+                  <li className="flex items-center">
+                    <Phone size={18} className="text-craft-dark mr-2" />
+                    <span>{company.contactInfo.phone}</span>
+                  </li>
+                )}
+                {company.contactInfo.email && (
+                  <li className="flex items-center">
+                    <Mail size={18} className="text-craft-dark mr-2" />
+                    <span>{company.contactInfo.email}</span>
+                  </li>
+                )}
+                {company.contactInfo.website && (
+                  <li className="flex items-center">
+                    <Globe size={18} className="text-craft-dark mr-2" />
+                    <a 
+                      href={company.contactInfo.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-craft-blue hover:underline"
+                    >
+                      {company.contactInfo.website.replace(/^https?:\/\//, '')}
+                    </a>
+                  </li>
+                )}
+              </ul>
 
-                <div className="mt-6">
-                  <h3 className="font-medium text-lg mb-3">Categories</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {company.categories.map((category) => (
-                      <Badge key={category} variant="outline" className={getCategoryColorClass(category)}>
-                        {category}
-                      </Badge>
+              <div className="mt-6">
+                <h3 className="text-lg font-medium text-craft-dark mb-3">Categories</h3>
+                <div className="flex flex-wrap gap-2">
+                  {company.categories.map((category, idx) => (
+                    <Badge 
+                      key={idx} 
+                      variant="outline"
+                      className="bg-craft-pastel text-craft-dark border-craft-light"
+                    >
+                      {category}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Activities List */}
+          <div className="md:w-2/3">
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h2 className="text-2xl font-semibold text-craft-dark">
+                Activities & Programs
+                <span className="ml-2 text-lg font-normal text-gray-500">
+                  ({filteredActivities.length})
+                </span>
+              </h2>
+              
+              <div className="relative inline-block">
+                <Button 
+                  variant="outline" 
+                  className="flex items-center gap-2 bg-white border-craft-light"
+                >
+                  <Filter size={16} />
+                  <span>Filter by Category</span>
+                </Button>
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-10 border border-craft-light p-3">
+                  <div className="flex flex-col gap-2">
+                    {uniqueCategories.map(category => (
+                      <label key={category} className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(category)}
+                          onChange={() => toggleCategory(category)}
+                          className="rounded border-craft-light text-craft-primary focus:ring-craft-primary"
+                        />
+                        <span className="text-sm">{category}</span>
+                      </label>
                     ))}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {company.contactInfo.phone && (
-                  <div 
-                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-md"
-                    onClick={() => handleContactClick("phone", company.contactInfo.phone!)}
-                  >
-                    <Phone className="mr-3 text-craft-dark" size={18} />
-                    <span>{company.contactInfo.phone}</span>
-                  </div>
-                )}
-                
-                {company.contactInfo.email && (
-                  <div 
-                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-md"
-                    onClick={() => handleContactClick("email", company.contactInfo.email!)}
-                  >
-                    <Mail className="mr-3 text-craft-dark" size={18} />
-                    <span>{company.contactInfo.email}</span>
-                  </div>
-                )}
-                
-                {company.contactInfo.website && (
-                  <div 
-                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-md"
-                    onClick={() => handleContactClick("website", company.contactInfo.website!)}
-                  >
-                    <Globe className="mr-3 text-craft-dark" size={18} />
-                    <span>{company.contactInfo.website}</span>
-                  </div>
-                )}
-              </CardContent>
-              <CardFooter>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Click on any contact information to copy to clipboard
-                </p>
-              </CardFooter>
-            </Card>
-          </div>
-        </div>
-
-        {/* Activities Section */}
-        <div className="mb-16">
-          <div className="flex flex-wrap items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Programs & Activities
-            </h2>
-            
-            <div className="flex items-center mt-4 sm:mt-0">
-              <Filter size={20} className="mr-2 text-craft-dark" />
-              <span className="mr-3">Filter by:</span>
-              <div className="flex flex-wrap gap-2">
-                <Badge 
-                  variant={selectedCategory === null ? "default" : "outline"}
-                  className="cursor-pointer px-3 py-1"
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  All
-                </Badge>
-                
-                {uniqueCategories.map(category => (
-                  <Badge 
-                    key={category}
-                    variant={selectedCategory === category ? "default" : "outline"}
-                    className={`cursor-pointer px-3 py-1 ${selectedCategory === category ? 'bg-craft-dark text-white' : getCategoryColorClass(category)}`}
-                    onClick={() => setSelectedCategory(category)}
-                  >
-                    {category}
-                  </Badge>
-                ))}
               </div>
             </div>
-          </div>
-          
-          <Separator className="mb-8" />
-          
-          {filteredActivities.length === 0 ? (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-medium mb-2">No activities found</h3>
-              <p className="text-gray-500 mb-4">Try selecting a different category filter</p>
-              <Button 
-                variant="outline" 
-                onClick={() => setSelectedCategory(null)}
-              >
-                Show All Activities
-              </Button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredActivities.map((activity) => (
-                <ActivityCard 
-                  key={activity.id} 
-                  activity={activity} 
-                  getCategoryColorClass={getCategoryColorClass}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
 
-interface ActivityCardProps {
-  activity: Activity;
-  getCategoryColorClass: (category: string) => string;
-}
-
-const ActivityCard: React.FC<ActivityCardProps> = ({ activity, getCategoryColorClass }) => {
-  return (
-    <Card className="overflow-hidden h-full flex flex-col transition-transform hover:shadow-lg hover:scale-[1.01]">
-      <div className="relative h-48 overflow-hidden">
-        <img 
-          src={activity.imageUrls[0]} 
-          alt={activity.title}
-          className="w-full h-full object-cover" 
-        />
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
-          <div className="flex flex-wrap gap-1">
-            {activity.categories.slice(0, 2).map(category => (
-              <Badge key={category} className={getCategoryColorClass(category)}>
-                {category}
-              </Badge>
-            ))}
-            {activity.categories.length > 2 && (
-              <Badge variant="secondary">+{activity.categories.length - 2}</Badge>
+            {filteredActivities.length > 0 ? (
+              <div className="grid grid-cols-1 gap-6">
+                {filteredActivities.map(activity => (
+                  <Link 
+                    key={activity.id} 
+                    to={`/activity/${activity.id}`}
+                    className="block"
+                  >
+                    <Card className="overflow-hidden flex flex-col md:flex-row hover:shadow-md transition-shadow bg-white border-craft-light">
+                      <div className="md:w-1/3 h-48 md:h-auto relative">
+                        <img 
+                          src={activity.imageUrls[0]} 
+                          alt={activity.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="p-5 md:w-2/3 flex flex-col justify-between">
+                        <div>
+                          <h3 className="text-xl font-semibold text-craft-dark mb-2">{activity.title}</h3>
+                          <p className="text-gray-600 mb-4 line-clamp-2">{activity.description}</p>
+                          
+                          <div className="flex flex-wrap gap-2 mb-4">
+                            {activity.categories.slice(0, 3).map((category, idx) => (
+                              <Badge 
+                                key={idx} 
+                                variant="outline"
+                                className="bg-craft-pastel/50 text-craft-dark border-craft-light"
+                              >
+                                {category}
+                              </Badge>
+                            ))}
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                            <div className="flex items-center">
+                              <Users size={16} className="text-craft-dark mr-2" />
+                              <span>{activity.ageRange}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <DollarSign size={16} className="text-craft-dark mr-2" />
+                              <span>{activity.priceRange}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <MapPin size={16} className="text-craft-dark mr-2" />
+                              <span>{activity.location}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <Clock size={16} className="text-craft-dark mr-2" />
+                              <span>{activity.duration || "Varies"}</span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex justify-end mt-4">
+                          <Button 
+                            variant="outline" 
+                            className="text-craft-dark border-craft-light flex items-center gap-1"
+                          >
+                            <span>View Details</span>
+                            <ChevronRight size={16} />
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white p-8 text-center rounded-lg border border-craft-light">
+                <h3 className="text-xl font-semibold text-craft-dark mb-3">No Activities Found</h3>
+                <p className="text-gray-600 mb-4">
+                  There are no activities matching your selected filters. Try adjusting your filter criteria.
+                </p>
+                {selectedCategories.length > 0 && (
+                  <Button 
+                    variant="outline"
+                    onClick={() => setSelectedCategories([])}
+                    className="text-craft-dark border-craft-light"
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
             )}
           </div>
         </div>
       </div>
-      
-      <CardHeader className="pb-2">
-        <CardTitle className="text-xl line-clamp-2">{activity.title}</CardTitle>
-        <div className="flex items-center text-sm text-gray-500 mt-1">
-          <Calendar className="mr-1" size={14} />
-          <span>{activity.dateRange}</span>
-        </div>
-      </CardHeader>
-      
-      <CardContent className="pb-4">
-        <p className="text-gray-600 dark:text-gray-400 line-clamp-3 mb-4">
-          {activity.description}
-        </p>
-        <div className="flex justify-between items-center">
-          <div className="flex items-center">
-            <Star className="text-yellow-400 mr-1" size={16} />
-            <span>{activity.rating.toFixed(1)}</span>
-            <span className="text-gray-500 text-sm ml-1">({activity.reviewCount})</span>
-          </div>
-          <div className="text-craft-dark font-semibold">
-            {activity.priceRange}
-          </div>
-        </div>
-      </CardContent>
-      
-      <CardFooter className="pt-0 mt-auto">
-        <Link to={`/activity/${activity.id}`} className="w-full">
-          <Button className="w-full bg-craft-dark hover:bg-craft-dark/90">
-            View Details
-          </Button>
-        </Link>
-      </CardFooter>
-    </Card>
+    </div>
   );
 };
 

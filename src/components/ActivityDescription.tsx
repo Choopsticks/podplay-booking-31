@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Activity } from "@/lib/activity-data";
-import { Check, Info, Calendar, Clock, MapPin, Users, DollarSign } from "lucide-react";
+import { Check, Info, Calendar, Clock, MapPin, Users, DollarSign, Tag } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 
@@ -19,21 +19,6 @@ const ActivityDescription: React.FC<ActivityDescriptionProps> = ({ activity }) =
             <div className="mt-4 prose prose-gray dark:prose-invert max-w-none">
               <p className="text-gray-700 dark:text-gray-300 leading-relaxed">{activity.longDescription}</p>
             </div>
-            
-            <div className="mt-6">
-              <h3 className="text-xl font-medium text-craft-dark dark:text-white mb-3">Categories</h3>
-              <div className="flex flex-wrap gap-2">
-                {activity.categories.map((category, idx) => (
-                  <Badge 
-                    key={idx} 
-                    variant="outline"
-                    className="bg-craft-pastel text-craft-dark border-craft-light hover:bg-craft-light"
-                  >
-                    {category}
-                  </Badge>
-                ))}
-              </div>
-            </div>
           </div>
           
           <div className="rounded-xl border border-gray-200 dark:border-gray-700 bg-craft-pastel/30 dark:bg-gray-900 p-6 animate-fade-up" style={{ animationDelay: "0.4s" }}>
@@ -47,6 +32,26 @@ const ActivityDescription: React.FC<ActivityDescriptionProps> = ({ activity }) =
                 <div>
                   <span className="block text-sm font-medium text-craft-dark dark:text-white">Age Range</span>
                   <span className="text-sm text-gray-700 dark:text-gray-300">{activity.ageRange}</span>
+                </div>
+              </li>
+              
+              <li className="flex items-start gap-3">
+                <div className="flex-shrink-0 rounded-full bg-craft-pastel dark:bg-craft-dark/30 p-1">
+                  <Tag size={16} className="text-craft-dark dark:text-craft-light" />
+                </div>
+                <div>
+                  <span className="block text-sm font-medium text-craft-dark dark:text-white">Categories</span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {activity.categories.map((category, idx) => (
+                      <Badge 
+                        key={idx} 
+                        variant="outline"
+                        className="bg-craft-pastel/50 text-craft-dark border-craft-light hover:bg-craft-light text-xs"
+                      >
+                        {category}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               </li>
               

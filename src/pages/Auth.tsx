@@ -8,6 +8,12 @@ import { Label } from "@/components/ui/label";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
+const LetterDecoration = ({ letter, color, className, style }: { letter: string; color: string; className?: string; style?: React.CSSProperties }) => (
+  <div className={`letter-decoration font-qanelas text-4xl font-bold ${className}`} style={{ color, ...style }}>
+    {letter}
+  </div>
+);
+
 const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -62,48 +68,59 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-sand-light flex flex-col justify-center">
-      <div className="container max-w-md mx-auto py-12 px-6">
-        <div className="bg-white p-8 rounded-lg shadow-md border border-sand-dark/10">
+    <div className="min-h-screen bg-sand-light flex flex-col justify-center relative overflow-hidden">
+      {/* Decorative elements */}
+      <LetterDecoration letter="K" color="#f06f5d" className="top-20 left-[15%]" style={{ '--rotation': '-15deg', '--delay': '0s' } as React.CSSProperties} />
+      <LetterDecoration letter="I" color="#425e9c" className="top-40 right-[20%]" style={{ '--rotation': '10deg', '--delay': '0.5s' } as React.CSSProperties} />
+      <LetterDecoration letter="D" color="#ad59b0" className="bottom-32 left-[25%]" style={{ '--rotation': '8deg', '--delay': '1s' } as React.CSSProperties} />
+      <LetterDecoration letter="S" color="#41dbbe" className="bottom-20 right-[25%]" style={{ '--rotation': '-5deg', '--delay': '1.5s' } as React.CSSProperties} />
+      
+      <div className="container max-w-md mx-auto py-12 px-6 relative z-10">
+        <div className="bg-white p-8 rounded-2xl shadow-md border border-kidsgo-brown/10">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-medium text-craft-dark">
+            <div className="text-2xl font-qanelas font-extrabold mb-3">
+              <span className="text-kidsgo-brown">Kids</span><span className="text-kidsgo-coral">Go</span> <span className="text-kidsgo-purple text-base font-semibold">Philippines</span>
+            </div>
+            <h1 className="text-2xl font-qanelas font-bold text-kidsgo-brown">
               {isSignUp ? "Create your account" : "Welcome back"}
             </h1>
-            <p className="text-gray-600 mt-2">
+            <p className="text-kidsgo-brown/70 mt-2">
               {isSignUp
-                ? "Join LittleBranch to connect with learning pods"
-                : "Sign in to continue with LittleBranch"}
+                ? "Join KidsGo to discover amazing kid-friendly activities"
+                : "Sign in to continue with KidsGo Philippines"}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-kidsgo-brown">Email</Label>
               <Input
                 id="email"
                 type="email"
                 placeholder="your@email.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="border-kidsgo-brown/20 focus:border-kidsgo-brown focus:ring-kidsgo-brown rounded-lg"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-kidsgo-brown">Password</Label>
               <Input
                 id="password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="border-kidsgo-brown/20 focus:border-kidsgo-brown focus:ring-kidsgo-brown rounded-lg"
                 required
               />
             </div>
 
             <Button
               type="submit"
-              className="w-full bg-craft hover:bg-craft-dark"
+              className="w-full bg-kidsgo-brown hover:bg-kidsgo-brown/90 text-white rounded-full"
               disabled={loading}
             >
               {loading
@@ -117,7 +134,7 @@ const AuthPage = () => {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-craft-dark hover:underline"
+              className="text-sm text-kidsgo-coral hover:underline"
             >
               {isSignUp
                 ? "Already have an account? Sign in"

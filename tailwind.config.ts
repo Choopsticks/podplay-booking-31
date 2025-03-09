@@ -75,9 +75,19 @@ export default {
 					dark: '#C89B8F'
 				},
 				sand: {
-					light: '#F9F5ED',
-					DEFAULT: '#F0E9D9',
-					dark: '#E0D6BE'
+					light: '#FFF8E7',
+					DEFAULT: '#FFF0D0',
+					dark: '#F5E0B0'
+				},
+				// New colors from the provided palette
+				kidsgo: {
+					brown: '#d58c3d',
+					blue: '#425e9c',
+					coral: '#f06f5d',
+					purple: '#ad59b0',
+					yellow: '#f3ee16',
+					teal: '#41dbbe',
+					green: '#26902a',
 				}
 			},
 			borderRadius: {
@@ -105,6 +115,10 @@ export default {
 				'scale-in': {
 					from: { opacity: '0', transform: 'scale(0.95)' },
 					to: { opacity: '1', transform: 'scale(1)' }
+				},
+				'float': {
+					'0%, 100%': { transform: 'translateY(0)' },
+					'50%': { transform: 'translateY(-10px)' }
 				}
 			},
 			animation: {
@@ -112,10 +126,12 @@ export default {
 				'accordion-up': 'accordion-up 0.2s ease-out',
 				'fade-in': 'fade-in 0.4s ease-out',
 				'fade-up': 'fade-up 0.5s ease-out',
-				'scale-in': 'scale-in 0.3s ease-out'
+				'scale-in': 'scale-in 0.3s ease-out',
+				'float': 'float 6s ease-in-out infinite'
 			},
 			fontFamily: {
-				sans: ['Inter', 'sans-serif']
+				sans: ['Inter', 'sans-serif'],
+				qanelas: ['"Qanelas Soft"', 'sans-serif']
 			}
 		}
 	},

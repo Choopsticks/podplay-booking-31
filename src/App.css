@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -12,10 +13,10 @@
   transition: filter 300ms;
 }
 .logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+  filter: drop-shadow(0 0 2em rgba(213, 140, 61, 0.6));
 }
 .logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+  filter: drop-shadow(0 0 2em rgba(97, 218, 251, 0.6));
 }
 
 @keyframes logo-spin {
@@ -39,4 +40,49 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Decorative elements */
+.wave-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 120px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23d58c3d33'%3E%3C/path%3E%3C/svg%3E");
+  z-index: -1;
+}
+
+/* Custom buttons for KidsGo */
+.kidsgo-button {
+  @apply bg-gradient-to-br from-kidsgo-brown to-kidsgo-brown/90 text-white font-medium rounded-full px-6 py-3 transition-transform hover:scale-105 hover:shadow-lg;
+}
+
+.kidsgo-button-secondary {
+  @apply bg-white border-2 border-kidsgo-brown text-kidsgo-brown font-medium rounded-full px-6 py-3 transition-transform hover:scale-105 hover:bg-kidsgo-brown/5;
+}
+
+/* Custom category badges */
+.category-badge {
+  @apply text-xs font-medium py-1 px-3 rounded-full transition-colors;
+}
+
+.category-badge.arts {
+  @apply bg-kidsgo-coral/20 text-kidsgo-coral;
+}
+
+.category-badge.sports {
+  @apply bg-kidsgo-blue/20 text-kidsgo-blue;
+}
+
+.category-badge.education {
+  @apply bg-kidsgo-teal/20 text-kidsgo-teal;
+}
+
+.category-badge.outdoor {
+  @apply bg-kidsgo-green/20 text-kidsgo-green;
+}
+
+.category-badge.entertainment {
+  @apply bg-kidsgo-purple/20 text-kidsgo-purple;
 }

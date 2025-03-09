@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Activity } from "@/lib/activity-data";
-import { Check, Info } from "lucide-react";
+import { Check, Info, Calendar, Clock, MapPin, Users, DollarSign } from "lucide-react";
 
 interface ActivityDescriptionProps {
   activity: Activity;
@@ -25,7 +25,7 @@ const ActivityDescription: React.FC<ActivityDescriptionProps> = ({ activity }) =
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
                 <div className="flex-shrink-0 rounded-full bg-craft-pastel dark:bg-craft-dark/30 p-1">
-                  <Check size={16} className="text-craft-dark dark:text-craft-light" />
+                  <Users size={16} className="text-craft-dark dark:text-craft-light" />
                 </div>
                 <div>
                   <span className="block text-sm font-medium text-gray-900 dark:text-white">Age Range</span>
@@ -35,7 +35,7 @@ const ActivityDescription: React.FC<ActivityDescriptionProps> = ({ activity }) =
               
               <li className="flex items-start gap-3">
                 <div className="flex-shrink-0 rounded-full bg-craft-pastel dark:bg-craft-dark/30 p-1">
-                  <Check size={16} className="text-craft-dark dark:text-craft-light" />
+                  <DollarSign size={16} className="text-craft-dark dark:text-craft-light" />
                 </div>
                 <div>
                   <span className="block text-sm font-medium text-gray-900 dark:text-white">Price Range</span>
@@ -45,7 +45,7 @@ const ActivityDescription: React.FC<ActivityDescriptionProps> = ({ activity }) =
               
               <li className="flex items-start gap-3">
                 <div className="flex-shrink-0 rounded-full bg-craft-pastel dark:bg-craft-dark/30 p-1">
-                  <Check size={16} className="text-craft-dark dark:text-craft-light" />
+                  <MapPin size={16} className="text-craft-dark dark:text-craft-light" />
                 </div>
                 <div>
                   <span className="block text-sm font-medium text-gray-900 dark:text-white">Location</span>
@@ -55,11 +55,21 @@ const ActivityDescription: React.FC<ActivityDescriptionProps> = ({ activity }) =
               
               <li className="flex items-start gap-3">
                 <div className="flex-shrink-0 rounded-full bg-craft-pastel dark:bg-craft-dark/30 p-1">
-                  <Check size={16} className="text-craft-dark dark:text-craft-light" />
+                  <Calendar size={16} className="text-craft-dark dark:text-craft-light" />
                 </div>
                 <div>
                   <span className="block text-sm font-medium text-gray-900 dark:text-white">Dates & Times</span>
                   <span className="text-sm text-gray-700 dark:text-gray-300">{activity.dateRange}</span>
+                </div>
+              </li>
+              
+              <li className="flex items-start gap-3">
+                <div className="flex-shrink-0 rounded-full bg-craft-pastel dark:bg-craft-dark/30 p-1">
+                  <Clock size={16} className="text-craft-dark dark:text-craft-light" />
+                </div>
+                <div>
+                  <span className="block text-sm font-medium text-gray-900 dark:text-white">Duration</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">{activity.duration || "Not specified"}</span>
                 </div>
               </li>
               

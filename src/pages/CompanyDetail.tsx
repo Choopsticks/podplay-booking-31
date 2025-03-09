@@ -1,409 +1,308 @@
 
 import React, { useState } from "react";
-import { Link, useParams, useNavigate } from "react-router-dom";
-import { getCompany, getActivitiesByCompany } from "@/lib/activity-data";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ChevronLeft, Menu, X, MapPin, Calendar, Phone, Mail, Globe, Star, Filter } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { useParams, Link } from "react-router-dom";
+import { 
+  getCompany, 
+  getActivitiesByCompany, 
+  Company, 
+  Activity 
+} from "@/lib/activity-data";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { 
+  MapPin, 
+  Calendar, 
+  Star, 
+  Phone, 
+  Mail, 
+  Globe, 
+  Filter 
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/components/ui/use-toast";
 
 const CompanyDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const company = getCompany(id);
+  const allActivities = getActivitiesByCompany(id);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const { user, isLoading } = useAuth();
-  const navigate = useNavigate();
+  const { toast } = useToast();
   
-  // Get the company and its activities
-  const company = id ? getCompany(id) : undefined;
-  const activities = id ? getActivitiesByCompany(id) : [];
+  // Get unique categories across all activities
+  const uniqueCategories = Array.from(
+    new Set(allActivities.flatMap(activity => activity.categories))
+  ).sort();
   
-  // If company not found, show error state
+  // Filter activities based on selected category
+  const filteredActivities = selectedCategory
+    ? allActivities.filter(activity => 
+        activity.categories.includes(selectedCategory)
+      )
+    : allActivities;
+
   if (!company) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-sand-light dark:bg-gray-900">
-        <div className="text-center">
-          <h2 className="text-2xl font-medium text-gray-900 dark:text-white mb-4">Company Not Found</h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">The company you're looking for doesn't exist or has been removed.</p>
-          <Button 
-            onClick={() => navigate('/')}
-            className="bg-craft hover:bg-craft-dark dark:bg-craft dark:hover:bg-craft-dark"
-          >
-            Back to Home
-          </Button>
-        </div>
+      <div className="container py-20 text-center">
+        <h1 className="text-3xl font-bold mb-4">Company Not Found</h1>
+        <p className="mb-8">The company you're looking for doesn't exist or has been removed.</p>
+        <Link to="/">
+          <Button>Return to Home</Button>
+        </Link>
       </div>
     );
   }
 
-  // Get all unique categories from activities
-  const categories = Array.from(
-    new Set(activities.flatMap(activity => activity.categories))
-  );
-
-  // Filter activities by category if selected
-  const filteredActivities = selectedCategory 
-    ? activities.filter(activity => activity.categories.includes(selectedCategory))
-    : activities;
-
-  const handleSignOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Signed out successfully",
-      });
-    }
+  // Helper function to get category color class
+  const getCategoryColorClass = (category: string) => {
+    const categoryMap: Record<string, string> = {
+      "Theme Park": "bg-craft-coral/20 text-craft-coral hover:bg-craft-coral/30",
+      "Educational": "bg-craft-blue/20 text-craft-blue hover:bg-craft-blue/30",
+      "Arts & Crafts": "bg-craft-purple/20 text-craft-purple hover:bg-craft-purple/30",
+      "Outdoor": "bg-craft-green/20 text-craft-green hover:bg-craft-green/30",
+      "Indoor": "bg-craft-yellow/20 text-craft-yellow hover:bg-craft-yellow/30",
+      "Wildlife": "bg-craft-teal/20 text-craft-teal hover:bg-craft-teal/30",
+      "Entertainment": "bg-craft-pink/20 text-craft-pink hover:bg-craft-pink/30",
+      "Role-play": "bg-craft-purple/20 text-craft-purple hover:bg-craft-purple/30",
+      "Science": "bg-craft-blue/20 text-craft-blue hover:bg-craft-blue/30",
+      "Museum": "bg-craft-teal/20 text-craft-teal hover:bg-craft-teal/30",
+      "Marine Life": "bg-craft-blue/20 text-craft-blue hover:bg-craft-blue/30",
+      "Family": "bg-craft-yellow/20 text-craft-yellow hover:bg-craft-yellow/30",
+    };
+    
+    return categoryMap[category] || "bg-gray-200 text-gray-700 hover:bg-gray-300";
   };
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen);
+  const handleContactClick = (type: string, value: string) => {
+    navigator.clipboard.writeText(value).then(() => {
+      toast({
+        title: "Contact Information Copied",
+        description: `${value} has been copied to your clipboard.`,
+        duration: 3000,
+      });
+    });
   };
-  
+
   return (
-    <div className="min-h-screen bg-sand-light dark:bg-gray-900">
-      <header className="border-b border-sand-dark/20 bg-white dark:bg-gray-800 dark:border-gray-700 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container flex items-center justify-between py-4">
-          <div className="flex items-center gap-2">
-            <Link to="/" className="text-2xl font-semibold text-craft-dark dark:text-craft-light">KidsGo Philippines</Link>
-          </div>
-          
-          {/* Desktop Navigation */}
-          <nav className="hidden md:block">
-            <ul className="flex items-center gap-8">
-              <li>
-                <a href="#" className="text-sm text-gray-600 dark:text-gray-300 transition-colors hover:text-craft-dark dark:hover:text-craft-light">
-                  Activities
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-sm text-gray-600 dark:text-gray-300 transition-colors hover:text-craft-dark dark:hover:text-craft-light">
-                  Destinations
-                </a>
-              </li>
-              <li>
-                <a href="#" className="text-sm text-gray-600 dark:text-gray-300 transition-colors hover:text-craft-dark dark:hover:text-craft-light">
-                  Submit Activity
-                </a>
-              </li>
-            </ul>
-          </nav>
-          
-          <div className="hidden md:flex items-center gap-4">
-            {isLoading ? (
-              <div className="h-9 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></div>
-            ) : user ? (
-              <>
-                <span className="text-sm text-gray-600 dark:text-gray-300">Hi, {user.email?.split('@')[0]}</span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="border-craft text-craft-dark dark:border-craft-light dark:text-craft-light hover:bg-craft-pastel dark:hover:bg-gray-700 hover:text-craft-dark"
-                  onClick={handleSignOut}
-                >
-                  Sign Out
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="border-craft text-craft-dark dark:border-craft-light dark:text-craft-light hover:bg-craft-pastel dark:hover:bg-gray-700 hover:text-craft-dark"
-                  onClick={() => navigate("/auth")}
-                >
-                  Log In
-                </Button>
-                <Button 
-                  size="sm" 
-                  className="bg-craft hover:bg-craft-dark dark:bg-craft dark:hover:bg-craft-dark"
-                  onClick={() => navigate("/auth", { state: { isSignUp: true } })}
-                >
-                  Sign Up
-                </Button>
-              </>
-            )}
-          </div>
-          
-          {/* Mobile Menu Button */}
-          <button 
-            className="md:hidden p-2 text-gray-600 dark:text-gray-300" 
-            onClick={toggleMobileMenu}
-          >
-            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
-        </div>
-        
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white dark:bg-gray-800 py-4 border-t border-gray-100 dark:border-gray-700 animate-fade-down absolute w-full z-20">
-            <div className="container">
-              <nav className="space-y-4">
-                <ul className="space-y-4">
-                  <li>
-                    <a href="#" className="block text-gray-600 dark:text-gray-300 hover:text-craft-dark dark:hover:text-craft-light">
-                      Activities
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="block text-gray-600 dark:text-gray-300 hover:text-craft-dark dark:hover:text-craft-light">
-                      Destinations
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="block text-gray-600 dark:text-gray-300 hover:text-craft-dark dark:hover:text-craft-light">
-                      Submit Activity
-                    </a>
-                  </li>
-                </ul>
-                <div className="flex flex-col gap-2 pt-2">
-                  {isLoading ? (
-                    <div className="h-9 w-full bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></div>
-                  ) : user ? (
-                    <>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Hi, {user.email?.split('@')[0]}</span>
-                      <Button 
-                        variant="outline"
-                        className="w-full border-craft text-craft-dark dark:border-craft-light dark:text-craft-light justify-center hover:bg-craft-pastel dark:hover:bg-gray-700 hover:text-craft-dark"
-                        onClick={handleSignOut}
-                      >
-                        Sign Out
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button 
-                        variant="outline" 
-                        className="w-full border-craft text-craft-dark dark:border-craft-light dark:text-craft-light justify-center hover:bg-craft-pastel dark:hover:bg-gray-700 hover:text-craft-dark"
-                        onClick={() => navigate("/auth")}
-                      >
-                        Log In
-                      </Button>
-                      <Button 
-                        className="w-full bg-craft hover:bg-craft-dark dark:bg-craft dark:hover:bg-craft-dark justify-center"
-                        onClick={() => navigate("/auth", { state: { isSignUp: true } })}
-                      >
-                        Sign Up
-                      </Button>
-                    </>
-                  )}
+    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen pb-20">
+      {/* Company Banner */}
+      <div className="relative h-64 md:h-96 bg-gradient-to-r from-craft-dark to-craft-dark/80 overflow-hidden">
+        <div className="absolute inset-0 bg-opacity-60 bg-black flex items-center">
+          <div className="container">
+            <div className="max-w-3xl">
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">{company.name}</h1>
+              <div className="flex items-center mb-4">
+                <MapPin className="text-white mr-2" size={18} />
+                <span className="text-white">{company.location}</span>
+                <span className="mx-2 text-white">•</span>
+                <div className="flex items-center">
+                  <Star className="text-yellow-400 mr-1" size={18} />
+                  <span className="text-white">{company.rating.toFixed(1)}</span>
+                  <span className="text-white ml-1">({company.reviewCount} reviews)</span>
                 </div>
-              </nav>
+              </div>
+              <p className="text-white text-opacity-90 text-lg max-w-xl">{company.description}</p>
             </div>
           </div>
-        )}
-      </header>
-      
-      <div className="container py-4">
-        <Link to="/" className="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 transition-colors hover:text-craft-dark dark:hover:text-craft-light">
-          <ChevronLeft size={14} />
-          Back to Companies
-        </Link>
+        </div>
       </div>
-      
-      {/* Company Header */}
-      <section className="bg-white dark:bg-gray-800 py-8 border-b border-gray-200 dark:border-gray-700">
-        <div className="container">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <div className="w-24 h-24 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden flex-shrink-0">
-              <img 
-                src={company.logo} 
-                alt={company.name} 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="flex-grow">
-              <h1 className="text-3xl font-medium text-gray-900 dark:text-white mb-2">{company.name}</h1>
-              <div className="flex items-center gap-6 mb-2">
-                <div className="flex items-center">
-                  <Star size={18} className="fill-yellow-400 text-yellow-400" />
-                  <span className="ml-1 text-sm font-medium text-gray-900 dark:text-white">{company.rating.toFixed(1)}</span>
-                  <span className="ml-1 text-sm text-gray-500 dark:text-gray-400">({company.reviewCount} reviews)</span>
-                </div>
-                <div className="flex items-center">
-                  <MapPin size={16} className="text-craft-dark dark:text-craft-light mr-1" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">{company.location}</span>
-                </div>
-              </div>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">{company.description}</p>
-              <div className="flex flex-wrap gap-2">
-                {company.categories.map((category, idx) => (
-                  <Badge key={idx} variant="outline" className="text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600">
-                    {category}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-            <div className="flex flex-col gap-3 min-w-[200px]">
-              <div className="flex items-center gap-2">
-                <Phone size={16} className="text-craft-dark dark:text-craft-light" />
-                <span className="text-sm text-gray-700 dark:text-gray-300">{company.contactInfo.phone}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Mail size={16} className="text-craft-dark dark:text-craft-light" />
-                <span className="text-sm text-gray-700 dark:text-gray-300">{company.contactInfo.email}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Globe size={16} className="text-craft-dark dark:text-craft-light" />
-                <a 
-                  href={company.contactInfo.website} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-sm text-craft dark:text-craft-light hover:underline"
-                >
-                  Visit website
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      
-      {/* Activities Section */}
-      <section className="py-12 bg-sand-light dark:bg-gray-900">
-        <div className="container">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-medium text-gray-900 dark:text-white">Activities by {company.name}</h2>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="flex items-center gap-1 border-craft text-craft-dark dark:border-craft-light dark:text-craft-light">
-                <Filter size={16} />
-                <span>Filters</span>
-              </Button>
-            </div>
-          </div>
 
-          {/* Category filters */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <Badge 
-              className={`cursor-pointer ${!selectedCategory ? 'bg-craft hover:bg-craft-dark dark:bg-craft dark:hover:bg-craft-dark' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
-              onClick={() => setSelectedCategory(null)}
-            >
-              All
-            </Badge>
-            {categories.map((category) => (
-              <Badge 
-                key={category} 
-                className={`cursor-pointer ${selectedCategory === category ? 'bg-craft hover:bg-craft-dark dark:bg-craft dark:hover:bg-craft-dark' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}`}
-                onClick={() => setSelectedCategory(category)}
-              >
-                {category}
-              </Badge>
-            ))}
-          </div>
-          
-          {/* Activities Grid */}
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {filteredActivities.map((activity) => (
-              <Link 
-                key={activity.id}
-                to={`/activity/${activity.id}`}
-                className="group relative overflow-hidden rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-shadow duration-300 h-full flex flex-col"
-              >
-                <div className="aspect-[4/3] relative overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-700 w-full">
-                  <img
-                    src={`${activity.imageUrls[0]}?w=600&h=450&fit=crop&auto=format&q=75`}
-                    alt={activity.title}
-                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-105 h-full w-full"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-70"></div>
-                  <div className="absolute bottom-3 left-3 flex space-x-1">
-                    {activity.categories.slice(0, 2).map((category, idx) => (
-                      <Badge key={idx} className="bg-craft/80 text-white text-xs">
+      <div className="container mt-8">
+        {/* Company Info Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>About {company.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-700 dark:text-gray-300">
+                  {company.description}
+                </p>
+
+                <div className="mt-6">
+                  <h3 className="font-medium text-lg mb-3">Categories</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {company.categories.map((category) => (
+                      <Badge key={category} variant="outline" className={getCategoryColorClass(category)}>
                         {category}
                       </Badge>
                     ))}
                   </div>
                 </div>
-                <div className="p-6 flex-grow flex flex-col">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="inline-block rounded-full bg-craft-pastel dark:bg-craft-dark/30 px-3 py-1 text-xs font-medium text-craft-dark dark:text-craft-light">
-                      {activity.ageRange}
-                    </span>
-                    <div className="flex items-center">
-                      <Star size={16} className="fill-yellow-400 text-yellow-400 mr-1" />
-                      <span className="text-sm font-medium">{activity.rating.toFixed(1)}</span>
-                    </div>
-                  </div>
-                  <h3 className="text-xl font-medium text-gray-900 dark:text-white line-clamp-2 h-14">{activity.title}</h3>
-                  <div className="mt-2 flex items-center text-gray-500 dark:text-gray-400">
-                    <MapPin size={16} className="mr-1 flex-shrink-0" />
-                    <span className="text-sm truncate">{activity.location}</span>
-                  </div>
-                  <div className="mt-2 flex items-center text-gray-500 dark:text-gray-400">
-                    <Calendar size={16} className="mr-1 flex-shrink-0" />
-                    <span className="text-sm truncate">{activity.dateRange}</span>
-                  </div>
-                  <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 line-clamp-2 flex-grow">{activity.description}</p>
-                  <div className="mt-4 flex items-center justify-between">
-                    <span className="font-medium text-gray-900 dark:text-white">{activity.priceRange}</span>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="text-craft dark:text-craft-light hover:text-craft-dark dark:hover:text-craft hover:bg-craft-pastel dark:hover:bg-craft-dark/30"
-                    >
-                      View Details →
-                    </Button>
-                  </div>
-                </div>
-              </Link>
-            ))}
+              </CardContent>
+            </Card>
           </div>
 
-          {filteredActivities.length === 0 && (
-            <div className="text-center py-12">
-              <h3 className="text-xl font-medium text-gray-900 dark:text-white">No activities found</h3>
-              <p className="mt-2 text-gray-600 dark:text-gray-300">Try changing your filter criteria</p>
-            </div>
-          )}
+          <div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {company.contactInfo.phone && (
+                  <div 
+                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-md"
+                    onClick={() => handleContactClick("phone", company.contactInfo.phone!)}
+                  >
+                    <Phone className="mr-3 text-craft-dark" size={18} />
+                    <span>{company.contactInfo.phone}</span>
+                  </div>
+                )}
+                
+                {company.contactInfo.email && (
+                  <div 
+                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-md"
+                    onClick={() => handleContactClick("email", company.contactInfo.email!)}
+                  >
+                    <Mail className="mr-3 text-craft-dark" size={18} />
+                    <span>{company.contactInfo.email}</span>
+                  </div>
+                )}
+                
+                {company.contactInfo.website && (
+                  <div 
+                    className="flex items-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-md"
+                    onClick={() => handleContactClick("website", company.contactInfo.website!)}
+                  >
+                    <Globe className="mr-3 text-craft-dark" size={18} />
+                    <span>{company.contactInfo.website}</span>
+                  </div>
+                )}
+              </CardContent>
+              <CardFooter>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Click on any contact information to copy to clipboard
+                </p>
+              </CardFooter>
+            </Card>
+          </div>
         </div>
-      </section>
-      
-      <footer className="bg-gray-50 dark:bg-gray-800 py-12 border-t border-gray-200 dark:border-gray-700">
-        <div className="container">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-            <div>
-              <span className="text-xl font-semibold text-craft-dark dark:text-craft-light">KidsGo Philippines</span>
-              <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">Connecting families with enriching experiences for children across the Philippines.</p>
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Explore</h3>
-              <ul className="mt-4 space-y-3">
-                <li><a href="#" className="text-sm text-gray-600 dark:text-gray-300 hover:text-craft-dark dark:hover:text-craft-light">Popular Activities</a></li>
-                <li><a href="#" className="text-sm text-gray-600 dark:text-gray-300 hover:text-craft-dark dark:hover:text-craft-light">By Location</a></li>
-                <li><a href="#" className="text-sm text-gray-600 dark:text-gray-300 hover:text-craft-dark dark:hover:text-craft-light">By Category</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Support</h3>
-              <ul className="mt-4 space-y-3">
-                <li><a href="#" className="text-sm text-gray-600 dark:text-gray-300 hover:text-craft-dark dark:hover:text-craft-light">Contact Us</a></li>
-                <li><a href="#" className="text-sm text-gray-600 dark:text-gray-300 hover:text-craft-dark dark:hover:text-craft-light">FAQs</a></li>
-                <li><a href="#" className="text-sm text-gray-600 dark:text-gray-300 hover:text-craft-dark dark:hover:text-craft-light">Terms of Service</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Stay Updated</h3>
-              <p className="mt-4 text-sm text-gray-600 dark:text-gray-300">Subscribe to our newsletter for new activities and updates.</p>
-              <div className="mt-4 flex">
-                <Input type="email" placeholder="Your email" className="w-full rounded-l-md dark:bg-gray-700 dark:border-gray-600" />
-                <Button className="rounded-l-none rounded-r-md bg-craft hover:bg-craft-dark dark:bg-craft dark:hover:bg-craft-dark">
-                  Join
-                </Button>
+
+        {/* Activities Section */}
+        <div className="mb-16">
+          <div className="flex flex-wrap items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Programs & Activities
+            </h2>
+            
+            <div className="flex items-center mt-4 sm:mt-0">
+              <Filter size={20} className="mr-2 text-craft-dark" />
+              <span className="mr-3">Filter by:</span>
+              <div className="flex flex-wrap gap-2">
+                <Badge 
+                  variant={selectedCategory === null ? "default" : "outline"}
+                  className="cursor-pointer px-3 py-1"
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  All
+                </Badge>
+                
+                {uniqueCategories.map(category => (
+                  <Badge 
+                    key={category}
+                    variant={selectedCategory === category ? "default" : "outline"}
+                    className={`cursor-pointer px-3 py-1 ${selectedCategory === category ? 'bg-craft-dark text-white' : getCategoryColorClass(category)}`}
+                    onClick={() => setSelectedCategory(category)}
+                  >
+                    {category}
+                  </Badge>
+                ))}
               </div>
             </div>
           </div>
+          
+          <Separator className="mb-8" />
+          
+          {filteredActivities.length === 0 ? (
+            <div className="text-center py-12">
+              <h3 className="text-xl font-medium mb-2">No activities found</h3>
+              <p className="text-gray-500 mb-4">Try selecting a different category filter</p>
+              <Button 
+                variant="outline" 
+                onClick={() => setSelectedCategory(null)}
+              >
+                Show All Activities
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredActivities.map((activity) => (
+                <ActivityCard 
+                  key={activity.id} 
+                  activity={activity} 
+                  getCategoryColorClass={getCategoryColorClass}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      </footer>
+      </div>
     </div>
+  );
+};
+
+interface ActivityCardProps {
+  activity: Activity;
+  getCategoryColorClass: (category: string) => string;
+}
+
+const ActivityCard: React.FC<ActivityCardProps> = ({ activity, getCategoryColorClass }) => {
+  return (
+    <Card className="overflow-hidden h-full flex flex-col transition-transform hover:shadow-lg hover:scale-[1.01]">
+      <div className="relative h-48 overflow-hidden">
+        <img 
+          src={activity.imageUrls[0]} 
+          alt={activity.title}
+          className="w-full h-full object-cover" 
+        />
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+          <div className="flex flex-wrap gap-1">
+            {activity.categories.slice(0, 2).map(category => (
+              <Badge key={category} className={getCategoryColorClass(category)}>
+                {category}
+              </Badge>
+            ))}
+            {activity.categories.length > 2 && (
+              <Badge variant="secondary">+{activity.categories.length - 2}</Badge>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <CardHeader className="pb-2">
+        <CardTitle className="text-xl line-clamp-2">{activity.title}</CardTitle>
+        <div className="flex items-center text-sm text-gray-500 mt-1">
+          <Calendar className="mr-1" size={14} />
+          <span>{activity.dateRange}</span>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="pb-4">
+        <p className="text-gray-600 dark:text-gray-400 line-clamp-3 mb-4">
+          {activity.description}
+        </p>
+        <div className="flex justify-between items-center">
+          <div className="flex items-center">
+            <Star className="text-yellow-400 mr-1" size={16} />
+            <span>{activity.rating.toFixed(1)}</span>
+            <span className="text-gray-500 text-sm ml-1">({activity.reviewCount})</span>
+          </div>
+          <div className="text-craft-dark font-semibold">
+            {activity.priceRange}
+          </div>
+        </div>
+      </CardContent>
+      
+      <CardFooter className="pt-0 mt-auto">
+        <Link to={`/activity/${activity.id}`} className="w-full">
+          <Button className="w-full bg-craft-dark hover:bg-craft-dark/90">
+            View Details
+          </Button>
+        </Link>
+      </CardFooter>
+    </Card>
   );
 };
 
